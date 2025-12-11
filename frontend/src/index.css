@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+/* Hindi Font Support - Noto Sans Devanagari */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  touch-action: manipulation; /* Prevent double-tap zoom */
+}
+
+/* Prevent zoom on double tap */
+html {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+body {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  /* Prevent iOS bounce effect */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Allow text selection for input fields and text content */
+input, textarea, [contenteditable], p, span, div, h1, h2, h3, h4, h5, h6 {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent zoom on double tap */
+html {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+body {
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+  /* Prevent iOS bounce effect */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 15s linear infinite;
+}
+
+/* Smooth scrolling for category menu */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #E21E26 #F2F2F2;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #F2F2F2;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: #E21E26;
+  border-radius: 3px;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hide scrollbar for shorts page */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
