@@ -104,7 +104,7 @@ function CategoryFormPage() {
         await categoryService.create(formData);
         setMessage({ type: 'success', text: 'श्रेणी सफलतापूर्वक बनाई गई' });
       }
-      
+
       setTimeout(() => {
         navigate('/admin/categories');
       }, 1500);
@@ -151,20 +151,18 @@ function CategoryFormPage() {
   return (
     <ProtectedRoute>
       <Layout title={isEdit ? 'श्रेणी संपादित करें' : 'नई श्रेणी जोड़ें'}>
-        <main className="flex-1 overflow-y-auto mx-2 sm:mx-3 md:mx-4 my-2 sm:my-3 md:my-4">
+        <main className="flex-1 overflow-y-auto mx-2 sm:mx-3 md:mx-4 my-2 sm:my-3 md:my-4 animate-fade-in">
           {/* Message */}
           {message.text && (
             <div
-              className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg ${
-                message.type === 'success'
+              className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg ${message.type === 'success'
                   ? 'bg-green-50 border border-green-200'
                   : 'bg-red-50 border border-red-200'
-              }`}
+                }`}
             >
               <p
-                className={`text-xs sm:text-sm ${
-                  message.type === 'success' ? 'text-green-800' : 'text-red-800'
-                }`}
+                className={`text-xs sm:text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'
+                  }`}
               >
                 {message.text}
               </p>
@@ -173,80 +171,80 @@ function CategoryFormPage() {
 
           {/* Form */}
           <div className="w-full">
-              <Form onSubmit={handleSubmit}>
+            <Form onSubmit={handleSubmit}>
+              <Form.Field
+                label="श्रेणी नाम (हिंदी)"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="उदाहरण: ब्रेकिंग न्यूज़"
+                required
+                error={errors.name}
+                disabled={loading}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                 <Form.Field
-                  label="श्रेणी नाम (हिंदी)"
-                  name="name"
-                  value={formData.name}
+                  label="आइकन (Emoji)"
+                  name="icon"
+                  value={formData.icon}
                   onChange={handleInputChange}
-                  placeholder="उदाहरण: ब्रेकिंग न्यूज़"
-                  required
-                  error={errors.name}
+                  placeholder="🔥"
                   disabled={loading}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
-                  <Form.Field
-                    label="आइकन (Emoji)"
-                    name="icon"
-                    value={formData.icon}
-                    onChange={handleInputChange}
-                    placeholder="🔥"
-                    disabled={loading}
-                  />
+                <Form.Field
+                  label="रंग"
+                  name="color"
+                  type="color"
+                  value={formData.color}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                />
+              </div>
 
-                  <Form.Field
-                    label="रंग"
-                    name="color"
-                    type="color"
-                    value={formData.color}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  />
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <Form.Field
+                  label="क्रम"
+                  name="order"
+                  type="number"
+                  value={formData.order}
+                  onChange={handleInputChange}
+                  required
+                  error={errors.order}
+                  disabled={loading}
+                  min="1"
+                />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
-                  <Form.Field
-                    label="क्रम"
-                    name="order"
-                    type="number"
-                    value={formData.order}
-                    onChange={handleInputChange}
-                    required
-                    error={errors.order}
-                    disabled={loading}
-                    min="1"
-                  />
+                <Form.Field
+                  label="स्थिति"
+                  name="status"
+                  type="select"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                  options={[
+                    { value: 'active', label: 'सक्रिय' },
+                    { value: 'inactive', label: 'निष्क्रिय' }
+                  ]}
+                />
+              </div>
 
-                  <Form.Field
-                    label="स्थिति"
-                    name="status"
-                    type="select"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                    options={[
-                      { value: 'active', label: 'सक्रिय' },
-                      { value: 'inactive', label: 'निष्क्रिय' }
-                    ]}
-                  />
-                </div>
-
-                <Form.Actions>
-                  <Form.Button type="submit" variant="primary" loading={loading}>
-                    {isEdit ? 'अपडेट करें' : 'सहेजें'}
-                  </Form.Button>
-                  <Form.Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => navigate('/admin/categories')}
-                    disabled={loading}
-                  >
-                    रद्द करें
-                  </Form.Button>
-                </Form.Actions>
-              </Form>
+              <Form.Actions>
+                <Form.Button type="submit" variant="primary" loading={loading}>
+                  {isEdit ? 'अपडेट करें' : 'सहेजें'}
+                </Form.Button>
+                <Form.Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate('/admin/categories')}
+                  disabled={loading}
+                >
+                  रद्द करें
+                </Form.Button>
+              </Form.Actions>
+            </Form>
           </div>
         </main>
       </Layout>

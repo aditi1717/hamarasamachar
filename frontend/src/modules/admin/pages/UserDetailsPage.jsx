@@ -86,7 +86,7 @@ const UserDetailsPage = () => {
                     </div>
                 }
             >
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Profile Header */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
                         <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-3xl font-bold">

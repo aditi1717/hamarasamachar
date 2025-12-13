@@ -80,12 +80,12 @@ function BottomNavbar() {
             key={item.id}
             onClick={() => handleTabClick(item.id)}
             className={`flex flex-col items-center justify-center gap-0.5 px-3 sm:px-4 py-1 transition-colors ${activeTab === item.id
-              ? 'text-orange-600'
+              ? 'text-[#E21E26]'
               : 'text-gray-600 hover:text-gray-900'
               }`}
             aria-label={item.label}
           >
-            <div className={`${activeTab === item.id ? 'text-orange-600' : 'text-gray-600'}`}>
+            <div className={`${activeTab === item.id ? 'text-[#E21E26]' : 'text-gray-600'}`}>
               {item.icon}
             </div>
             <span className={`text-xs sm:text-sm ${activeTab === item.id ? 'font-bold' : 'font-normal'}`}>{item.label}</span>

@@ -178,7 +178,7 @@ const RatingsPage = () => {
                 />
             )}
             <Layout title="रेटिंग और समीक्षा">
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-100 shadow-sm flex items-center justify-between">

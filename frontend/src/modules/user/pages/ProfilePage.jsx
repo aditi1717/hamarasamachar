@@ -197,139 +197,141 @@ function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20 sm:pb-24">
-      {/* Header - Sticky */}
-      <div className="sticky top-0 z-50 bg-white flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-orange-600 text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
-          aria-label="Back"
-        >
-          ‹
-        </button>
-        <h2 className="text-sm sm:text-base font-bold text-gray-800">प्रोफाइल</h2>
-        <div className="w-6 sm:w-8"></div>
-      </div>
+    <div className="min-h-screen bg-white">
+      <div className="page-transition pb-20 sm:pb-24">
+        {/* Header - Sticky */}
+        <div className="sticky top-0 z-50 bg-white flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-[#E21E26] text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
+            aria-label="Back"
+          >
+            ‹
+          </button>
+          <h2 className="text-sm sm:text-base font-bold text-gray-800">प्रोफाइल</h2>
+          <div className="w-6 sm:w-8"></div>
+        </div>
 
-      {/* Main Content */}
-      <div className="px-2.5 sm:px-3 py-3 sm:py-4">
-        {/* Profile Information Section */}
-        <div className="mb-4 sm:mb-5">
-          <div className="relative overflow-hidden bg-white border border-gray-100 rounded-2xl shadow-sm p-4 sm:p-5">
-            <div className="flex items-start justify-between relative z-10">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">👤</span>
-                  <div>
-                    <p className="text-lg font-bold text-gray-900 leading-tight">
-                      {mobileNumber || 'Guest User'}
-                    </p>
-                    <p className="text-xs text-gray-400 font-medium tracking-wide">ID: {generateUserId()}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1 mt-3 pl-1">
-                  {profileData?.birthday && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <span>🎂</span>
-                      <span>{new Date(profileData.birthday).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                    </div>
-                  )}
-                  {profileData?.gender && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <span>⚧</span>
-                      <span>{profileData.gender === 'male' ? 'पुरुष' : profileData.gender === 'female' ? 'महिला' : 'अन्य'}</span>
-                    </div>
-                  )}
-                </div>
-
-                {selectedCategories.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">पसंदीदा विषय</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedCategories.slice(0, 5).map((category) => (
-                        <span key={category} className="text-xs font-medium px-2.5 py-1 bg-orange-50 text-orange-700 border border-orange-100 rounded-lg">
-                          {category}
-                        </span>
-                      ))}
-                      {selectedCategories.length > 5 && (
-                        <span className="text-xs font-medium px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-lg">
-                          +{selectedCategories.length - 5} और
-                        </span>
-                      )}
+        {/* Main Content */}
+        <div className="px-2.5 sm:px-3 py-3 sm:py-4">
+          {/* Profile Information Section */}
+          <div className="mb-4 sm:mb-5">
+            <div className="relative overflow-hidden bg-white border border-gray-100 rounded-2xl shadow-sm p-4 sm:p-5">
+              <div className="flex items-start justify-between relative z-10">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">👤</span>
+                    <div>
+                      <p className="text-lg font-bold text-gray-900 leading-tight">
+                        {mobileNumber || 'Guest User'}
+                      </p>
+                      <p className="text-xs text-gray-400 font-medium tracking-wide">ID: {generateUserId()}</p>
                     </div>
                   </div>
-                )}
+
+                  <div className="space-y-1 mt-3 pl-1">
+                    {profileData?.birthday && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>🎂</span>
+                        <span>{new Date(profileData.birthday).toLocaleDateString('hi-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
+                    )}
+                    {profileData?.gender && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span>⚧</span>
+                        <span>{profileData.gender === 'male' ? 'पुरुष' : profileData.gender === 'female' ? 'महिला' : 'अन्य'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedCategories.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">पसंदीदा विषय</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedCategories.slice(0, 5).map((category) => (
+                          <span key={category} className="text-xs font-medium px-2.5 py-1 bg-[#E21E26]/5 text-[#E21E26] border border-[#E21E26]/10 rounded-lg">
+                            {category}
+                          </span>
+                        ))}
+                        {selectedCategories.length > 5 && (
+                          <span className="text-xs font-medium px-2.5 py-1 bg-gray-50 text-gray-600 border border-gray-100 rounded-lg">
+                            +{selectedCategories.length - 5} और
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleEdit}
+                  className="p-2 text-gray-400 hover:text-[#E21E26] hover:bg-[#E21E26]/5 rounded-xl transition-all"
+                  aria-label="Edit"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={handleEdit}
-                className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
-                aria-label="Edit"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Menu Sections Container */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-5">
-          {/* Top Menu Items */}
-          <div className="divide-y divide-gray-50">
-            {topMenuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-gray-500 group-hover:text-orange-600 transition-colors p-1.5 bg-gray-50 group-hover:bg-orange-50 rounded-lg">
-                    {item.icon}
+          {/* Menu Sections Container */}
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-5">
+            {/* Top Menu Items */}
+            <div className="divide-y divide-gray-50">
+              {topMenuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-gray-500 group-hover:text-[#E21E26] transition-colors p-1.5 bg-gray-50 group-hover:bg-[#E21E26]/5 rounded-lg">
+                      {item.icon}
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">{item.label}</span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">{item.label}</span>
-                </div>
-                <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom Menu Items */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-50">
-            {bottomMenuItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className={`w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors group`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-1.5 rounded-lg transition-colors ${item.isDestructive
-                    ? 'bg-red-50 text-red-500 group-hover:bg-red-100'
-                    : 'bg-gray-50 text-gray-500 group-hover:bg-orange-50 group-hover:text-orange-600'
-                    }`}>
-                    {item.icon}
-                  </div>
-                  <span className={`text-sm font-semibold ${item.isDestructive ? 'text-red-600' : 'text-gray-700 group-hover:text-gray-900'
-                    }`}>{item.label}</span>
-                </div>
-                {!item.isDestructive && (
                   <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                )}
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* App Version */}
-        <div className="mt-4 sm:mt-5 text-center">
-          <p className="text-xs text-gray-400">App Version v1.0.0</p>
+          {/* Bottom Menu Items */}
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-50">
+              {bottomMenuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className={`w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors group`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-1.5 rounded-lg transition-colors ${item.isDestructive
+                      ? 'bg-red-50 text-red-500 group-hover:bg-red-100'
+                      : 'bg-gray-50 text-gray-500 group-hover:bg-[#E21E26]/5 group-hover:text-[#E21E26]'
+                      }`}>
+                      {item.icon}
+                    </div>
+                    <span className={`text-sm font-semibold ${item.isDestructive ? 'text-red-600' : 'text-gray-700 group-hover:text-gray-900'
+                      }`}>{item.label}</span>
+                  </div>
+                  {!item.isDestructive && (
+                    <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* App Version */}
+          <div className="mt-4 sm:mt-5 text-center">
+            <p className="text-xs text-gray-400">App Version v1.0.0</p>
+          </div>
         </div>
       </div>
 
@@ -339,7 +341,7 @@ function ProfilePage() {
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-          <div className="bg-orange-600 rounded-lg shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-5">
+          <div className="bg-[#E21E26] rounded-lg shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-5">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-3">
               लॉग आउट
             </h3>
@@ -349,13 +351,13 @@ function ProfilePage() {
             <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg border-2 border-white bg-transparent text-white font-medium hover:bg-white hover:text-orange-600 transition-colors text-sm sm:text-base"
+                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg border-2 border-white bg-transparent text-white font-medium hover:bg-white hover:text-[#E21E26] transition-colors text-sm sm:text-base"
               >
                 रद्द करें
               </button>
               <button
                 onClick={handleLogoutConfirm}
-                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg bg-white text-orange-600 font-medium hover:bg-gray-100 transition-colors text-sm sm:text-base"
+                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg bg-white text-[#E21E26] font-medium hover:bg-gray-100 transition-colors text-sm sm:text-base"
               >
                 लॉग आउट
               </button>
@@ -367,7 +369,7 @@ function ProfilePage() {
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm">
-          <div className="bg-orange-600 rounded-lg shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-5">
+          <div className="bg-[#E21E26] rounded-lg shadow-2xl max-w-xs sm:max-w-sm w-full p-4 sm:p-5">
             <h3 className="text-base sm:text-lg font-semibold text-white mb-2 sm:mb-3">
               खाता हटाएं
             </h3>
@@ -377,7 +379,7 @@ function ProfilePage() {
             <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg border-2 border-white bg-transparent text-white font-medium hover:bg-white hover:text-orange-600 transition-colors text-sm sm:text-base"
+                className="flex-1 py-2 sm:py-2.5 px-4 rounded-lg border-2 border-white bg-transparent text-white font-medium hover:bg-white hover:text-[#E21E26] transition-colors text-sm sm:text-base"
               >
                 रद्द करें
               </button>
@@ -396,4 +398,3 @@ function ProfilePage() {
 }
 
 export default ProfilePage;
-

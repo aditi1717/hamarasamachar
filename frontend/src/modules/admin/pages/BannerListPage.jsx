@@ -234,7 +234,7 @@ function BannerListPage() {
   return (
     <ProtectedRoute>
       <Layout title="बैनर" showPageHeader={true}>
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
 
           {/* Message */}
           {message.text && (

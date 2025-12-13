@@ -164,7 +164,7 @@ function ShortsPage() {
   }
 
   return (
-    <div className="h-[100dvh] w-full bg-black overflow-hidden relative">
+    <div className="h-[100dvh] w-full bg-black overflow-hidden relative animate-fade-in">
       {/* Header with Arrow, Logo, and Share */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/70 to-transparent pt-2 pb-4 px-4">
         <div className="flex items-center justify-between">

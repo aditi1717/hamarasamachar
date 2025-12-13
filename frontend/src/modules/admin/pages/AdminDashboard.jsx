@@ -51,9 +51,9 @@ function AdminDashboard() {
     <ProtectedRoute>
       <Layout title="एडमिन डैशबोर्ड" showPageHeader={false}>
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-2 sm:p-3">
+        <main className="flex-1 overflow-y-auto p-2 sm:p-3 animate-fade-in">
           {/* Quick Actions */}
-          <div className="mb-3 sm:mb-4 flex flex-wrap gap-2 sm:gap-3">
+          <div className="mb-3 sm:mb-4 flex flex-wrap gap-2 sm:gap-3 animate-slide-up">
             <button
               onClick={() => navigate('/admin/news/create')}
               className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm text-white transition-all shadow-md hover:shadow-lg"
@@ -104,7 +104,7 @@ function AdminDashboard() {
           </div>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4 animate-slide-up stagger-1">
             {/* Total News Count - Enhanced */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#E21E26]/20 transition-all duration-300">
               <div className="flex items-center justify-between mb-4">

@@ -30,7 +30,7 @@ function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E21E26]/5 via-white to-[#E21E26]/5 px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E21E26]/5 via-white to-[#E21E26]/5 px-3 sm:px-4 py-4 sm:py-6 md:py-8 animate-fade-in">
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-4 sm:mb-5">

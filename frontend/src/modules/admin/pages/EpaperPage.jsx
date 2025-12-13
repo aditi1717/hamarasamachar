@@ -98,7 +98,7 @@ const EpaperPage = () => {
             )}
 
             <Layout title="ई-पेपर प्रबंधन">
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Toolbar */}
                     <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <h2 className="text-lg font-semibold text-gray-800">दैनिक ई-पेपर</h2>

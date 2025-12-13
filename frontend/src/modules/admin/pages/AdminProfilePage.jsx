@@ -61,7 +61,7 @@ function AdminProfilePage() {
   return (
     <ProtectedRoute>
       <Layout title="प्रोफ़ाइल">
-        <main className="flex-1 overflow-y-auto p-2 sm:p-3">
+        <main className="flex-1 overflow-y-auto p-2 sm:p-3 animate-fade-in">
           <div className="max-w-4xl mx-auto">
             {/* Message */}
             {message.text && (

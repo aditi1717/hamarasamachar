@@ -282,7 +282,7 @@ const UserListPage = () => {
             )}
 
             <Layout title="उपयोगकर्ता प्रबंधन">
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">

@@ -255,7 +255,7 @@ function NewsListPage() {
                 />
             )}
             <Layout title="समाचार प्रबंधन" showPageHeader={true}>
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Actions Bar */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                         <button

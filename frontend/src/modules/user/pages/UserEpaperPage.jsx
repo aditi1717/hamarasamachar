@@ -86,9 +86,9 @@ function UserEpaperPage() {
                         </svg>
                     </button>
 
-                    <div className="bg-orange-600 h-48 rounded-b-[40px] flex flex-col items-center justify-center text-white px-4 text-center">
+                    <div className="bg-[#E21E26] h-48 rounded-b-[40px] flex flex-col items-center justify-center text-white px-4 text-center">
                         <h2 className="text-2xl font-bold mb-2">प्रीमियम सदस्य बनें</h2>
-                        <p className="text-orange-100 text-sm">दैनिक ई-पेपर और विज्ञापन मुक्त समाचारों का आनंद लें</p>
+                        <p className="text-[#E21E26]/10 text-sm">दैनिक ई-पेपर और विज्ञापन मुक्त समाचारों का आनंद लें</p>
                     </div>
 
                     <div className="px-4 -mt-10 space-y-4">
@@ -96,7 +96,7 @@ function UserEpaperPage() {
                             <div
                                 key={plan.id}
                                 onClick={() => setSelectedPlan(plan)}
-                                className={`bg-white rounded-xl shadow-lg border-2 p-6 transition-all relative ${selectedPlan.id === plan.id ? 'border-orange-500 transform scale-105' : 'border-transparent'
+                                className={`bg-white rounded-xl shadow-lg border-2 p-6 transition-all relative ${selectedPlan.id === plan.id ? 'border-[#E21E26] transform scale-105' : 'border-transparent'
                                     }`}
                             >
                                 {plan.id === 'yearly' && (
@@ -109,7 +109,7 @@ function UserEpaperPage() {
                                         <h3 className="font-bold text-lg text-gray-800">{plan.name}</h3>
                                         <p className="text-gray-500 text-sm">{plan.period}</p>
                                     </div>
-                                    <div className="text-2xl font-bold text-orange-600">
+                                    <div className="text-2xl font-bold text-[#E21E26]">
                                         ₹{plan.price}
                                     </div>
                                 </div>
@@ -130,7 +130,7 @@ function UserEpaperPage() {
                     <div className="p-4 mt-4">
                         <button
                             onClick={handleSubscribe}
-                            className="w-full py-3 bg-orange-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-orange-700 transition-colors"
+                            className="w-full py-3 bg-[#E21E26] text-white rounded-xl font-bold text-lg shadow-lg hover:bg-[#C21A20] transition-colors"
                         >
                             {selectedPlan.name} चुनें (₹{selectedPlan.price})
                         </button>
@@ -144,84 +144,86 @@ function UserEpaperPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20 sm:pb-24">
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-3 py-2.5 border-b border-gray-200 shadow-sm">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="text-orange-600 text-2xl font-bold"
-                >
-                    ‹
-                </button>
-                <h2 className="text-base font-bold text-gray-800">ई-पेपर</h2>
-                <div className="w-8">
-                    {/* Optional: Calendar Icon */}
-                </div>
-            </div>
-
-            <div className="p-4">
-                {!isSubscribed && (
-                    <div
-                        onClick={() => setShowSubscription(true)}
-                        className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-4 text-white hover:shadow-lg transition-all cursor-pointer mb-6"
+        <div className="min-h-screen bg-gray-50">
+            <div className="page-transition pb-20 sm:pb-24">
+                {/* Header */}
+                <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-3 py-2.5 border-b border-gray-200 shadow-sm">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="text-[#E21E26] text-2xl font-bold"
                     >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-bold text-lg">प्रीमियम मेंबरशिप</p>
-                                <p className="text-sm opacity-90">ई-पेपर पढ़ने के लिए अभी सब्सक्राइब करें</p>
-                            </div>
-                            <div className="bg-white/20 p-2 rounded-lg">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                        </div>
+                        ‹
+                    </button>
+                    <h2 className="text-base font-bold text-gray-800">ई-पेपर</h2>
+                    <div className="w-8">
+                        {/* Optional: Calendar Icon */}
                     </div>
-                )}
+                </div>
 
-                <h3 className="font-bold text-gray-800 mb-4">हालिया ई-पेपर</h3>
-
-                {loading ? (
-                    <div className="flex justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-600"></div>
-                    </div>
-                ) : epapers.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-4">
-                        {epapers.map((paper) => (
-                            <div
-                                key={paper.id}
-                                onClick={() => handleEpaperClick(paper)}
-                                className="bg-white rounded-lg shadow-sm overflow-hidden group cursor-pointer relative"
-                            >
-                                <div className="aspect-[3/4] bg-gray-200 relative">
-                                    <img
-                                        src={paper.coverUrl}
-                                        alt={paper.date}
-                                        className={`w-full h-full object-cover transition-all duration-300 ${!isSubscribed ? 'filter blur-[2px]' : ''}`}
-                                    />
-                                    {!isSubscribed && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                                            <div className="bg-black/60 p-2 rounded-full">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
-                                        <p className="text-white text-sm font-medium">
-                                            {new Date(paper.date).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' })}
-                                        </p>
-                                    </div>
+                <div className="p-4">
+                    {!isSubscribed && (
+                        <div
+                            onClick={() => setShowSubscription(true)}
+                            className="bg-gradient-to-r from-[#E21E26] to-[#C21A20] rounded-xl p-4 text-white hover:shadow-lg transition-all cursor-pointer mb-6"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-bold text-lg">प्रीमियम मेंबरशिप</p>
+                                    <p className="text-sm opacity-90">ई-पेपर पढ़ने के लिए अभी सब्सक्राइब करें</p>
+                                </div>
+                                <div className="bg-white/20 p-2 rounded-lg">
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-8 text-gray-500">
-                        कोई ई-पेपर उपलब्ध नहीं है
-                    </div>
-                )}
+                        </div>
+                    )}
+
+                    <h3 className="font-bold text-gray-800 mb-4">हालिया ई-पेपर</h3>
+
+                    {loading ? (
+                        <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#E21E26]"></div>
+                        </div>
+                    ) : epapers.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-4">
+                            {epapers.map((paper) => (
+                                <div
+                                    key={paper.id}
+                                    onClick={() => handleEpaperClick(paper)}
+                                    className="bg-white rounded-lg shadow-sm overflow-hidden group cursor-pointer relative"
+                                >
+                                    <div className="aspect-[3/4] bg-gray-200 relative">
+                                        <img
+                                            src={paper.coverUrl}
+                                            alt={paper.date}
+                                            className={`w-full h-full object-cover transition-all duration-300 ${!isSubscribed ? 'filter blur-[2px]' : ''}`}
+                                        />
+                                        {!isSubscribed && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                                <div className="bg-black/60 p-2 rounded-full">
+                                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+                                            <p className="text-white text-sm font-medium">
+                                                {new Date(paper.date).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            कोई ई-पेपर उपलब्ध नहीं है
+                        </div>
+                    )}
+                </div>
             </div>
 
             <BottomNavbar />

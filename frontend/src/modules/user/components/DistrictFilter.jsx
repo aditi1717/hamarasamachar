@@ -12,11 +12,10 @@ function DistrictFilter({ selectedDistrict, onDistrictChange }) {
             <button
               key={district}
               onClick={() => onDistrictChange(district)}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                selectedDistrict === district
-                  ? 'bg-red-600 text-white'
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${selectedDistrict === district
+                  ? 'bg-[#E21E26] text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-              }`}
+                }`}
             >
               {district}
             </button>

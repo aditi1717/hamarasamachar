@@ -151,7 +151,7 @@ function NewsDetailViewPage() {
                     </div>
                 }
             >
-                <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+                <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 animate-fade-in">
                     {/* Action Buttons */}
                     <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                         <div className="flex flex-wrap items-center gap-2">
@@ -236,11 +236,10 @@ function NewsDetailViewPage() {
                                             ब्रेकिंग न्यूज़
                                         </span>
                                     )}
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                        news.status === 'published'
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${news.status === 'published'
                                             ? 'bg-green-100 text-green-700'
                                             : 'bg-yellow-100 text-yellow-700'
-                                    }`}>
+                                        }`}>
                                         {news.status === 'published' ? 'प्रकाशित' : 'ड्राफ्ट'}
                                     </span>
                                 </div>

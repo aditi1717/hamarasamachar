@@ -74,7 +74,7 @@ function CategorySelectionPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-y-auto bg-white flex flex-col" style={{ height: '100dvh' }}>
+    <div className="fixed inset-0 overflow-y-auto bg-white flex flex-col page-transition" style={{ height: '100dvh' }}>
       {/* Header - Sticky */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-md flex-shrink-0" style={{ backgroundColor: '#E21E26' }}>
         <button

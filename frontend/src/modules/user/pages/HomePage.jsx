@@ -105,35 +105,37 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <Header />
+      <div className="page-transition">
+        {/* Header */}
+        <Header />
 
-      {/* Breaking News Banner */}
-      <BreakingNewsBanner />
+        {/* Breaking News Banner */}
+        <BreakingNewsBanner />
 
-      {/* Category Menu */}
-      <CategoryMenu onCategoryChange={handleCategoryChange} />
+        {/* Category Menu */}
+        <CategoryMenu onCategoryChange={handleCategoryChange} />
 
-      {/* District Filter - Only show for राजस्थान category */}
-      {selectedCategory === 'राजस्थान' && (
-        <DistrictFilter
-          selectedDistrict={selectedDistrict}
-          onDistrictChange={handleDistrictChange}
-        />
-      )}
+        {/* District Filter - Only show for राजस्थान category */}
+        {selectedCategory === 'राजस्थान' && (
+          <DistrictFilter
+            selectedDistrict={selectedDistrict}
+            onDistrictChange={handleDistrictChange}
+          />
+        )}
 
-      {/* News Content */}
-      <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-3 pb-20 sm:pb-24">
-        <div className="space-y-0">
-          {newsData.length > 0 ? (
-            newsData.map((news) => (
-              <NewsCard key={news.id} news={news} />
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">इस श्रेणी में कोई समाचार नहीं मिला</p>
-            </div>
-          )}
+        {/* News Content */}
+        <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-3 pb-20 sm:pb-24">
+          <div className="space-y-0">
+            {newsData.length > 0 ? (
+              newsData.map((news) => (
+                <NewsCard key={news.id} news={news} />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">इस श्रेणी में कोई समाचार नहीं मिला</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -144,4 +146,3 @@ function HomePage() {
 }
 
 export default HomePage;
-

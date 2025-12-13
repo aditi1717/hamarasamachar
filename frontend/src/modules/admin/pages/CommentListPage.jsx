@@ -198,7 +198,7 @@ const CommentListPage = () => {
             )}
 
             <Layout title="कमेंट्स मॉडरेशन">
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
@@ -313,7 +313,7 @@ const CommentListPage = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedComment.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                            selectedComment.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                        selectedComment.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                                         }`}>
                                         {selectedComment.status}
                                     </span>

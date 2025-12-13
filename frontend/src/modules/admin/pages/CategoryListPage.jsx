@@ -171,7 +171,7 @@ function CategoryListPage() {
   return (
     <ProtectedRoute>
       <Layout title="श्रेणियाँ" showPageHeader={true}>
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
 
           {/* Message */}
           {message.text && (

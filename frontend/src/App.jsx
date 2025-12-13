@@ -17,7 +17,6 @@ import FeedbackListPage from './modules/admin/pages/FeedbackListPage';
 import RatingsPage from './modules/admin/pages/RatingsPage';
 import UserListPage from './modules/admin/pages/UserListPage';
 import UserDetailsPage from './modules/admin/pages/UserDetailsPage';
-import CommentListPage from './modules/admin/pages/CommentListPage';
 import EpaperPage from './modules/admin/pages/EpaperPage';
 import SplashPage from './modules/user/pages/SplashPage';
 import LoginPage from './modules/user/pages/LoginPage';
@@ -26,6 +25,7 @@ import ProfileSetupPage from './modules/user/pages/ProfileSetupPage';
 import CategorySelectionPage from './modules/user/pages/CategorySelectionPage';
 import CitySelectionPage from './modules/user/pages/CitySelectionPage';
 import UserEpaperPage from './modules/user/pages/UserEpaperPage';
+import NotificationPage from './modules/user/pages/NotificationPage';
 import ProfilePage from './modules/user/pages/ProfilePage';
 import NewsDetailPage from './modules/user/pages/NewsDetailPage';
 import ShortsPage from './modules/user/pages/ShortsPage';
@@ -49,6 +49,7 @@ function App() {
           <Route path="/category-selection" element={<CategorySelectionPage />} />
           <Route path="/city-selection" element={<CitySelectionPage />} />
           <Route path="/epaper" element={<UserEpaperPage />} />
+          <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/user" element={<UserHomePage />} />
           <Route path="/category/:categorySlug" element={<UserHomePage />} />
           <Route path="/category/:categorySlug/:districtSlug" element={<UserHomePage />} />

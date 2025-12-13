@@ -200,7 +200,7 @@ const FeedbackListPage = () => {
             )}
 
             <Layout title="फीडबैक प्रबंधन">
-                <div className="p-4 sm:p-6 space-y-6">
+                <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Toolbar */}
                     <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
                         <div className="text-gray-500">
@@ -309,8 +309,8 @@ const FeedbackListPage = () => {
                                         </span>
                                     </div>
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedFeedback.status === 'New' ? 'bg-red-100 text-red-700' :
-                                            selectedFeedback.status === 'Read' ? 'bg-yellow-100 text-yellow-700' :
-                                                'bg-green-100 text-green-700'
+                                        selectedFeedback.status === 'Read' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-green-100 text-green-700'
                                         }`}>
                                         {selectedFeedback.status}
                                     </span>
