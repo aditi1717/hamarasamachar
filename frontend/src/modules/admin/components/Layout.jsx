@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/colors';
 import logo from '../assets/samachar-logo.png';
@@ -13,13 +13,13 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Check if mobile (only for styling, not for auto-close)
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -28,8 +28,8 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
   if (!showSidebar) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header 
-          title={title} 
+        <Header
+          title={title}
           onBack={() => window.history.back()}
           compact={true}
         />
@@ -41,10 +41,9 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div 
-        className={`sidebar-container ${
-          sidebarOpen ? 'w-64' : 'w-0 md:w-20'
-        } bg-white shadow-lg transition-all duration-300 flex flex-col fixed md:relative z-20`}
+      <div
+        className={`sidebar-container ${sidebarOpen ? 'w-64' : 'w-0 md:w-20'
+          } bg-white shadow-lg transition-all duration-300 flex flex-col fixed md:relative z-20`}
         style={{
           height: '100vh',
           minHeight: '100vh',
@@ -53,12 +52,12 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
         }}
       >
         {/* Logo */}
-        <div 
-          className="border-b flex-shrink-0 overflow-hidden" 
-          style={{ 
+        <div
+          className="border-b flex-shrink-0 overflow-hidden"
+          style={{
             height: '60px',
-            display: 'flex', 
-            alignItems: 'center', 
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: COLORS.header.bg,
             borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -66,11 +65,11 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             paddingLeft: '12px'
           }}
         >
-          <img 
-            src={logo} 
-            alt="हमारा समाचार Logo" 
+          <img
+            src={logo}
+            alt="हमारा समाचार Logo"
             className="object-contain"
-            style={{ 
+            style={{
               display: 'block',
               filter: 'brightness(0) invert(1)',
               margin: '0',
@@ -82,10 +81,10 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-2 overflow-y-auto" style={{ minHeight: 0 }}>
-          <button
-            onClick={() => navigate('/admin/dashboard')}
+          <Link
+            to="/admin/dashboard"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
-            style={{ 
+            style={{
               backgroundColor: location.pathname === '/admin/dashboard' ? `${COLORS.header.bg}40` : 'transparent',
               color: location.pathname === '/admin/dashboard' ? COLORS.header.bg : '#374151'
             }}
@@ -104,11 +103,11 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
             {sidebarOpen && <span>डैशबोर्ड</span>}
-          </button>
-          <button
-            onClick={() => navigate('/admin/news')}
+          </Link>
+          <Link
+            to="/admin/news"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
-            style={{ 
+            style={{
               backgroundColor: location.pathname.startsWith('/admin/news') ? `${COLORS.header.bg}40` : 'transparent',
               color: location.pathname.startsWith('/admin/news') ? COLORS.header.bg : '#374151'
             }}
@@ -126,12 +125,12 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
-            {sidebarOpen && <span>समाचार</span>}
-          </button>
-          <button
-            onClick={() => navigate('/admin/categories')}
+            {sidebarOpen && <span>समाचार प्रबंधन</span>}
+          </Link>
+          <Link
+            to="/admin/categories"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
-            style={{ 
+            style={{
               backgroundColor: location.pathname.startsWith('/admin/categories') ? `${COLORS.header.bg}40` : 'transparent',
               color: location.pathname.startsWith('/admin/categories') ? COLORS.header.bg : '#374151'
             }}
@@ -150,11 +149,11 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
             {sidebarOpen && <span>श्रेणियाँ</span>}
-          </button>
-          <button
-            onClick={() => navigate('/admin/banners')}
+          </Link>
+          <Link
+            to="/admin/banners"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
-            style={{ 
+            style={{
               backgroundColor: location.pathname.startsWith('/admin/banners') ? `${COLORS.header.bg}40` : 'transparent',
               color: location.pathname.startsWith('/admin/banners') ? COLORS.header.bg : '#374151'
             }}
@@ -173,11 +172,103 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             {sidebarOpen && <span>बैनर</span>}
-          </button>
-          <button
-            onClick={() => navigate('/admin/profile')}
+          </Link>
+          <Link
+            to="/admin/feedback"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
-            style={{ 
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/feedback') ? `${COLORS.header.bg}40` : 'transparent',
+              color: location.pathname.startsWith('/admin/feedback') ? COLORS.header.bg : '#374151'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/feedback')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/feedback')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            {sidebarOpen && <span>फीडबैक</span>}
+          </Link>
+          <Link
+            to="/admin/ratings"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/ratings') ? `${COLORS.header.bg}40` : 'transparent',
+              color: location.pathname.startsWith('/admin/ratings') ? COLORS.header.bg : '#374151'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/ratings')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/ratings')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+            {sidebarOpen && <span>रेटिंग</span>}
+          </Link>
+          <Link
+            to="/admin/users"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/users') ? `${COLORS.header.bg}40` : 'transparent',
+              color: location.pathname.startsWith('/admin/users') ? COLORS.header.bg : '#374151'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/users')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/users')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            {sidebarOpen && <span>उपयोगकर्ता</span>}
+          </Link>
+          <Link
+            to="/admin/epaper"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/epaper') ? `${COLORS.header.bg}40` : 'transparent',
+              color: location.pathname.startsWith('/admin/epaper') ? COLORS.header.bg : '#374151'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/epaper')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/epaper')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+            {sidebarOpen && <span>ई-पेपर</span>}
+          </Link>
+          <Link
+            to="/admin/profile"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all"
+            style={{
               backgroundColor: location.pathname === '/admin/profile' ? `${COLORS.header.bg}40` : 'transparent',
               color: location.pathname === '/admin/profile' ? COLORS.header.bg : '#374151'
             }}
@@ -196,7 +287,7 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             {sidebarOpen && <span>प्रोफ़ाइल</span>}
-          </button>
+          </Link>
         </nav>
 
         {/* Toggle Sidebar */}
@@ -213,46 +304,52 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300">
-        {/* Header */}
-        <Header 
-          title="एडमिन डैशबोर्ड"
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-          rightContent={
-            <div className="flex items-center gap-2 md:gap-3">
-              <div 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-sm"
-                style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  color: COLORS.header.text
-                }}
-              >
-                {admin?.name?.charAt(0).toUpperCase() || 'A'}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300">
+        {/* Header - Sticky */}
+        <div className="flex-none z-10 sticky top-0">
+          <Header
+            title="एडमिन डैशबोर्ड"
+            onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+            rightContent={
+              <div className="flex items-center gap-2 md:gap-3">
+                <div
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs md:text-sm"
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: COLORS.header.text
+                  }}
+                >
+                  {admin?.name?.charAt(0).toUpperCase() || 'A'}
+                </div>
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs md:text-sm font-medium" style={{ color: COLORS.header.text }}>
+                    {admin?.name || 'Admin'}
+                  </p>
+                  <p className="text-xs opacity-80 hidden md:block" style={{ color: COLORS.header.text }}>
+                    {admin?.role?.replace('_', ' ') || 'Admin'}
+                  </p>
+                </div>
               </div>
-              <div className="text-right hidden sm:block">
-                <p className="text-xs md:text-sm font-medium" style={{ color: COLORS.header.text }}>
-                  {admin?.name || 'Admin'}
-                </p>
-                <p className="text-xs opacity-80 hidden md:block" style={{ color: COLORS.header.text }}>
-                  {admin?.role?.replace('_', ' ') || 'Admin'}
-                </p>
-              </div>
-            </div>
-          }
-          compact={true}
-        />
-
-        {/* Page Header */}
-        {showPageHeader && title && (
-          <PageHeader 
-            title={title}
-            onBack={title !== 'एडमिन डैशबोर्ड' ? () => window.history.back() : null}
-            rightContent={pageHeaderRightContent}
+            }
+            compact={true}
           />
-        )}
 
-        {/* Content */}
-        {children}
+          {/* Page Header - Sticky under main Header */}
+          {showPageHeader && title && (
+            <div className="bg-gray-50 border-b border-gray-200">
+              <PageHeader
+                title={title}
+                onBack={title !== 'एडमिन डैशबोर्ड' ? () => window.history.back() : null}
+                rightContent={pageHeaderRightContent}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Content - Scrollable */}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          {children}
+        </main>
       </div>
     </div>
   );

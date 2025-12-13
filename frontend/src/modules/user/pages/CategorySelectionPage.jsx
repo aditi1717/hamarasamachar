@@ -76,82 +76,87 @@ function CategorySelectionPage() {
   return (
     <div className="fixed inset-0 overflow-y-auto bg-white flex flex-col" style={{ height: '100dvh' }}>
       {/* Header - Sticky */}
-      <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200 flex-shrink-0">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-md flex-shrink-0" style={{ backgroundColor: '#E21E26' }}>
         <button
           onClick={() => navigate(-1)}
-          className="text-orange-600 text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
+          className="text-white text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
           aria-label="Back"
         >
           ‹
         </button>
-        <h2 className="text-sm sm:text-base font-semibold text-gray-800 text-center flex-1 px-2">
+        <h2 className="text-sm sm:text-base font-semibold text-white text-center flex-1 px-2">
           अपने पसंदीदा विषय चुनें
         </h2>
         <button
           onClick={handleSkip}
-          className="text-orange-600 text-xs sm:text-sm font-medium hover:opacity-80 transition-opacity"
+          className="text-white text-xs sm:text-sm font-medium hover:opacity-80 transition-opacity"
         >
           स्किप
         </button>
       </div>
 
       {/* Main Content */}
-      <div className="px-2.5 sm:px-3 py-3 sm:py-4">
-        {/* Instruction */}
-        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center leading-snug">
-          अपने पसंदीदा विषयों को आगे रखें और उनके अधिक अपडेट प्राप्त करें
-        </p>
+      <div className="flex-1 flex flex-col justify-center px-6 sm:px-8 py-4 sm:py-6">
+        <div className="w-full max-w-2xl mx-auto">
+          {/* Instruction */}
+          <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 text-center leading-snug">
+            अपने पसंदीदा विषयों को आगे रखें और उनके अधिक अपडेट प्राप्त करें
+          </p>
 
-        {/* Category Grid */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
-          {CATEGORIES.map((category) => {
-            const isSelected = selectedCategories.includes(category);
-            return (
-              <button
-                key={category}
-                onClick={() => toggleCategory(category)}
-                className={`relative flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-full transition-all ${
-                  isSelected
-                    ? 'bg-orange-100 ring-2 ring-orange-600'
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
-              >
-                {/* Checkmark for selected */}
-                {isSelected && (
-                  <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-orange-600 rounded-full p-0.5 sm:p-1">
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-                
-                {/* Category Icon */}
-                <span className="text-2xl sm:text-3xl md:text-4xl mb-1 sm:mb-1.5">{categoryIcons[category] || '📰'}</span>
-                
-                {/* Category Label */}
-                <span className="text-[10px] sm:text-xs font-medium text-gray-700 text-center leading-tight px-0.5">
-                  {category}
-                </span>
-              </button>
-            );
-          })}
+          {/* Category Grid */}
+          <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8">
+            {CATEGORIES.map((category) => {
+              const isSelected = selectedCategories.includes(category);
+              return (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`relative flex flex-col items-center justify-center p-1.5 rounded-lg transition-all duration-300 transform ${isSelected
+                    ? 'bg-[#E21E26]/5 ring-1 ring-[#E21E26] shadow-sm scale-95'
+                    : 'bg-white border border-gray-100 hover:border-[#E21E26]/30 hover:shadow-sm'
+                    }`}
+                  style={{ aspectRatio: '1/1' }}
+                >
+                  {/* Checkmark for selected */}
+                  {isSelected && (
+                    <div className="absolute top-0.5 right-0.5 bg-[#E21E26] rounded-full p-0.5 shadow-sm">
+                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Category Icon */}
+                  <span className={`text-xl sm:text-2xl mb-1 transition-transform duration-300 ${isSelected ? 'scale-110' : 'grayscale opacity-80'}`}>
+                    {categoryIcons[category] || '📰'}
+                  </span>
+
+                  {/* Category Label */}
+                  <span className={`text-[9px] sm:text-[10px] font-semibold text-center leading-tight transition-colors line-clamp-1 ${isSelected ? 'text-[#E21E26]' : 'text-gray-500'
+                    }`}>
+                    {category}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Continue Button */}
+          <button
+            onClick={handleContinue}
+            className="w-full py-2.5 rounded-xl font-bold text-base tracking-wide bg-gradient-to-r from-[#E21E26] to-[#C21A20] text-white hover:shadow-[#E21E26]/30 shadow-lg transform transition-all duration-200 active:scale-95 mb-3"
+          >
+            आगे बढ़ें
+          </button>
+
+          {/* Skip Button */}
+          <button
+            onClick={handleSkip}
+            className="w-full py-1.5 sm:py-2 text-gray-600 text-xs sm:text-sm hover:text-gray-800 transition-colors"
+          >
+            स्किप करें
+          </button>
         </div>
-
-        {/* Continue Button */}
-        <button
-          onClick={handleContinue}
-          className="w-full py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base bg-orange-600 text-white hover:bg-orange-700 active:bg-orange-800 transition-all shadow-sm mb-2 sm:mb-2.5"
-        >
-          आगे बढ़ें
-        </button>
-
-        {/* Skip Button */}
-        <button
-          onClick={handleSkip}
-          className="w-full py-1.5 sm:py-2 text-gray-600 text-xs sm:text-sm hover:text-gray-800 transition-colors"
-        >
-          स्किप करें
-        </button>
       </div>
     </div>
   );

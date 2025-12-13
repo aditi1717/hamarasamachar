@@ -5,7 +5,7 @@ function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const mobileNumber = location.state?.mobileNumber || '+916264560457';
-  
+
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -49,7 +49,7 @@ function OTPPage() {
 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) return; // Only allow single digit
-    
+
     const newOtp = [...otp];
     newOtp[index] = value.replace(/\D/g, ''); // Only numbers
     setOtp(newOtp);
@@ -118,20 +118,20 @@ function OTPPage() {
   return (
     <div className="fixed inset-0 overflow-hidden bg-white flex flex-col" style={{ height: '100dvh' }}>
       {/* Header - Sticky */}
-      <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200 flex-shrink-0">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-md flex-shrink-0" style={{ backgroundColor: '#E21E26' }}>
         <button
           onClick={() => navigate(-1)}
-          className="text-orange-600 text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
+          className="text-white text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
           aria-label="Back"
         >
           ‹
         </button>
-        <h2 className="text-sm sm:text-base font-semibold text-gray-800">OTP वेरीफिकेशन</h2>
+        <h2 className="text-sm sm:text-base font-semibold text-white">OTP वेरीफिकेशन</h2>
         <div className="w-6 sm:w-8"></div>
       </div>
 
       {/* Main Content - Centered */}
-      <div className="flex-1 flex items-center justify-center px-2.5 sm:px-3 py-3 sm:py-4 overflow-hidden">
+      <div className="flex-1 flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 overflow-hidden">
         <div className="w-full max-w-sm sm:max-w-md">
           {/* Instruction */}
           <p className="text-center text-sm sm:text-base text-gray-900 mb-4 sm:mb-5 leading-snug">
@@ -139,7 +139,7 @@ function OTPPage() {
           </p>
 
           {/* OTP Input Fields */}
-          <div className="flex justify-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+          <div className="flex justify-center gap-2 sm:gap-3 mb-5 sm:mb-6">
             {otp.map((digit, index) => (
               <input
                 key={index}
@@ -151,8 +151,10 @@ function OTPPage() {
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
-                className="w-12 h-12 sm:w-14 sm:h-14 text-center font-semibold border-b-2 border-gray-300 focus:border-orange-600 outline-none transition-colors"
-                style={{ fontSize: '16px' }}
+                className={`w-12 h-12 sm:w-14 sm:h-14 text-center text-xl sm:text-2xl font-bold border-2 rounded-xl outline-none transition-all shadow-sm ${digit
+                  ? 'border-[#E21E26] bg-[#E21E26]/5 text-[#E21E26]'
+                  : 'border-gray-200 bg-white focus:border-[#E21E26] focus:ring-4 focus:ring-[#E21E26]/10'
+                  }`}
               />
             ))}
           </div>
@@ -161,16 +163,15 @@ function OTPPage() {
           <div className="flex justify-between mb-4 sm:mb-5">
             <button
               onClick={handleChangeNumber}
-              className="text-orange-600 text-xs sm:text-sm font-medium hover:opacity-80 transition-opacity"
+              className="text-[#E21E26] text-xs sm:text-sm font-medium hover:opacity-80 transition-opacity"
             >
               नंबर बदलना है?
             </button>
             <button
               onClick={handleResend}
               disabled={!canResend}
-              className={`text-xs sm:text-sm font-medium transition-opacity ${
-                canResend ? 'text-orange-600 hover:opacity-80' : 'text-gray-400'
-              }`}
+              className={`text-xs sm:text-sm font-medium transition-opacity ${canResend ? 'text-[#E21E26] hover:opacity-80' : 'text-gray-400'
+                }`}
             >
               OTP दोबारा भेजें {!canResend && `(${formatTime(timer)})`}
             </button>
@@ -180,11 +181,10 @@ function OTPPage() {
           <button
             onClick={handleConfirm}
             disabled={otp.join('').length !== 4}
-            className={`w-full py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base mb-2 sm:mb-2.5 transition-all shadow-sm ${
-              otp.join('').length === 4
-                ? 'bg-orange-600 text-white hover:bg-orange-700 active:bg-orange-800'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-md transform transition-all duration-200 active:scale-95 mb-3 ${otp.join('').length === 4
+              ? 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] text-white hover:shadow-[#E21E26]/30 hover:-translate-y-0.5'
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+              }`}
           >
             पुष्टि करें
           </button>

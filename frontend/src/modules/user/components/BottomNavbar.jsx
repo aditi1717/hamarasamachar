@@ -15,6 +15,8 @@ function BottomNavbar() {
       setActiveTab('shorts');
     } else if (path === '/category/breaking' || path.startsWith('/category/')) {
       setActiveTab('home');
+    } else if (path === '/epaper') {
+      setActiveTab('epaper');
     }
   }, [location.pathname]);
 
@@ -27,8 +29,7 @@ function BottomNavbar() {
     } else if (tab === 'shorts') {
       navigate('/shorts');
     } else if (tab === 'epaper') {
-      // TODO: Navigate to e-paper page
-      console.log('E-Paper clicked');
+      navigate('/epaper');
     }
   };
 
@@ -78,11 +79,10 @@ function BottomNavbar() {
           <button
             key={item.id}
             onClick={() => handleTabClick(item.id)}
-            className={`flex flex-col items-center justify-center gap-0.5 px-3 sm:px-4 py-1 transition-colors ${
-              activeTab === item.id
-                ? 'text-orange-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`flex flex-col items-center justify-center gap-0.5 px-3 sm:px-4 py-1 transition-colors ${activeTab === item.id
+              ? 'text-orange-600'
+              : 'text-gray-600 hover:text-gray-900'
+              }`}
             aria-label={item.label}
           >
             <div className={`${activeTab === item.id ? 'text-orange-600' : 'text-gray-600'}`}>

@@ -28,15 +28,15 @@ function ShortsPage() {
       const containerRect = container.getBoundingClientRect();
       const videos = container.querySelectorAll('.video-item');
       const viewportCenter = containerRect.top + containerRect.height / 2;
-      
+
       let closestIndex = 0;
       let closestDistance = Infinity;
-      
+
       videos.forEach((videoEl, index) => {
         const videoRect = videoEl.getBoundingClientRect();
         const videoCenter = videoRect.top + videoRect.height / 2;
         const distance = Math.abs(viewportCenter - videoCenter);
-        
+
         if (distance < closestDistance) {
           closestDistance = distance;
           closestIndex = index;
@@ -52,18 +52,18 @@ function ShortsPage() {
       videos.forEach((videoEl, index) => {
         const videoId = videoNews[index]?.id;
         if (!videoId) return;
-        
+
         const videoElement = videoRefs.current[videoId];
         if (!videoElement) return;
-        
+
         const videoRect = videoEl.getBoundingClientRect();
-        const isInView = 
+        const isInView =
           videoRect.top < containerRect.bottom &&
           videoRect.bottom > containerRect.top &&
           Math.abs((videoRect.top + videoRect.height / 2) - viewportCenter) < containerRect.height / 2;
 
         if (isInView && index === closestIndex) {
-          videoElement.play().catch(() => {});
+          videoElement.play().catch(() => { });
           setIsPlaying(prev => ({ ...prev, [videoId]: true }));
         } else {
           videoElement.pause();
@@ -99,7 +99,7 @@ function ShortsPage() {
         setTimeout(() => {
           const videoElement = videoRefs.current[firstVideoId];
           if (videoElement) {
-            videoElement.play().catch(() => {});
+            videoElement.play().catch(() => { });
             setIsPlaying(prev => ({ ...prev, [firstVideoId]: true }));
           }
         }, 100);
@@ -113,7 +113,7 @@ function ShortsPage() {
         title: news.title,
         text: news.description,
         url: window.location.origin + `/news/${news.id}`
-      }).catch(() => {});
+      }).catch(() => { });
     } else {
       // Fallback: Copy to clipboard
       const url = window.location.origin + `/news/${news.id}`;
@@ -164,7 +164,7 @@ function ShortsPage() {
   }
 
   return (
-    <div className="h-screen w-full bg-black overflow-hidden relative">
+    <div className="h-[100dvh] w-full bg-black overflow-hidden relative">
       {/* Header with Arrow, Logo, and Share */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/70 to-transparent pt-2 pb-4 px-4">
         <div className="flex items-center justify-between">
@@ -226,22 +226,22 @@ function ShortsPage() {
       {/* Video Container - Scrollable like Instagram Reels */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+        className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide scroll-smooth"
         style={{ scrollBehavior: 'smooth' }}
       >
         {videoNews.map((news, index) => (
           <div
             key={news.id}
-            className="video-item h-screen w-full snap-start snap-always relative flex items-center justify-center bg-black"
+            className="video-item h-[100dvh] w-full snap-start snap-always relative flex items-center justify-center bg-black pb-[80px]"
           >
             {/* Video */}
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full flex items-center justify-center">
               <video
                 ref={(el) => {
                   if (el) videoRefs.current[news.id] = el;
                 }}
                 src={news.videoUrl}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 loop
                 muted
                 playsInline
@@ -267,25 +267,25 @@ function ShortsPage() {
               )}
 
               {/* Category on Left Bottom */}
-              <div className="absolute bottom-20 left-4 z-40">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 text-white text-sm font-medium rounded-full backdrop-blur-sm border border-white/30 drop-shadow-lg">
+              <div className="absolute bottom-[45px] left-4 z-40 transition-all duration-300">
+                <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-900/80 text-white text-sm sm:text-base font-semibold rounded-full backdrop-blur-md border border-white/10 shadow-lg hover:bg-neutral-800 transition-colors cursor-pointer">
                   {news.category}
-                  <span className="text-xs">›</span>
+                  <span className="text-xs opacity-70">›</span>
                 </span>
               </div>
 
               {/* Right Bottom - Download and Share Buttons (Vertical) */}
-              <div className="absolute bottom-40 right-4 z-40 flex flex-col gap-3">
+              <div className="absolute bottom-32 right-3 z-40 flex flex-col gap-4">
                 {/* Download Button */}
                 <button
                   onClick={() => handleDownload(news)}
-                  className="flex flex-col items-center text-white"
+                  className="group flex flex-col items-center gap-1 text-white transition-transform active:scale-95"
                   aria-label="Download"
                 >
-                  <div className="bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/40 transition-colors drop-shadow-lg">
+                  <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-black/60 transition-colors shadow-lg">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -298,21 +298,19 @@ function ShortsPage() {
                       />
                     </svg>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-medium">डाउनलोड</span>
-                  </div>
+                  <span className="text-[10px] sm:text-xs font-medium drop-shadow-md opacity-90">डाउनलोड</span>
                 </button>
 
                 {/* Share Button */}
                 <button
                   onClick={() => handleShare(news)}
-                  className="flex flex-col items-center text-white"
+                  className="group flex flex-col items-center gap-1 text-white transition-transform active:scale-95"
                   aria-label="Share"
                 >
-                  <div className="bg-black/30 p-2 rounded-full backdrop-blur-sm border border-white/20 hover:bg-black/40 transition-colors drop-shadow-lg">
+                  <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-black/60 transition-colors shadow-lg">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
+                      className="h-5 w-5 sm:h-6 sm:w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -325,9 +323,7 @@ function ShortsPage() {
                       />
                     </svg>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-medium">शेयर</span>
-                  </div>
+                  <span className="text-[10px] sm:text-xs font-medium drop-shadow-md opacity-90">शेयर</span>
                 </button>
               </div>
 

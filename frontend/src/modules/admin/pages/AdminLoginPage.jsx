@@ -30,32 +30,33 @@ function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-3 sm:px-4 py-4 sm:py-6 md:py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E21E26]/5 via-white to-[#E21E26]/5 px-3 sm:px-4 py-4 sm:py-6 md:py-8">
       <div className="w-full max-w-md">
         {/* Logo and Header */}
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <div className="flex justify-center mb-3 sm:mb-4">
-            <img 
-              src={logo} 
-              alt="हमारा समाचार Logo" 
-              className="h-12 sm:h-14 md:h-16 w-auto"
+        <div className="text-center mb-4 sm:mb-5">
+          <div className="flex justify-center mb-2 sm:mb-3">
+            <img
+              src={logo}
+              alt="हमारा समाचार Logo"
+              className="h-10 sm:h-12 md:h-14 w-auto"
             />
           </div>
-          <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">एडमिन लॉगिन</h1>
-          <p className="text-sm sm:text-base text-gray-600 px-2">एडमिन पैनल तक पहुंचने के लिए साइन इन करें</p>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1">एडमिन लॉगिन</h1>
+          <p className="text-xs sm:text-sm text-gray-600 px-2">एडमिन पैनल तक पहुंचने के लिए साइन इन करें</p>
         </div>
 
         {/* Login Form */}
-        <div 
-          className="bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 border-t-4 border-orange-600"
+        <div
+          className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-4 sm:p-5 md:p-6 border border-white/50 relative overflow-hidden"
         >
-          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 sm:space-y-5 md:space-y-6">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#E21E26] to-[#C21A20]"></div>
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-3 sm:space-y-4">
             {/* Error Message */}
             {error && (
-              <div 
+              <div
                 className="p-3 rounded-lg text-sm"
-                style={{ 
-                  backgroundColor: '#FEE2E2', 
+                style={{
+                  backgroundColor: '#FEE2E2',
                   color: '#DC2626',
                   border: '1px solid #FCA5A5'
                 }}
@@ -66,7 +67,7 @@ function AdminLoginPage() {
 
             {/* Username/Email Input */}
             <div>
-              <label htmlFor="username" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+              <label htmlFor="username" className="block text-xs font-medium text-gray-700 mb-1">
                 उपयोगकर्ता नाम या ईमेल
               </label>
               <input
@@ -77,14 +78,14 @@ function AdminLoginPage() {
                 placeholder="उपयोगकर्ता नाम या ईमेल दर्ज करें"
                 required
                 autoComplete="off"
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-600 transition-colors"
+                className="w-full px-3 py-2 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all hover:bg-white"
                 disabled={loading}
               />
             </div>
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
                 पासवर्ड
               </label>
               <div className="relative">
@@ -96,7 +97,7 @@ function AdminLoginPage() {
                   placeholder="पासवर्ड दर्ज करें"
                   required
                   autoComplete="new-password"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-600 transition-colors pr-10 sm:pr-12"
+                  className="w-full px-3 py-2 text-sm bg-gray-50/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all hover:bg-white pr-10"
                   disabled={loading}
                 />
                 <button
@@ -126,7 +127,7 @@ function AdminLoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-gray-300 focus:ring-2 focus:ring-orange-500 accent-orange-600"
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-gray-300 focus:ring-2 focus:ring-[#E21E26] accent-[#E21E26]"
                   disabled={loading}
                 />
                 <span className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-gray-700">मुझे याद रखें</span>
@@ -137,7 +138,7 @@ function AdminLoginPage() {
                   // TODO: Implement forgot password
                   alert('पासवर्ड भूल गए सुविधा जल्द ही आ रही है');
                 }}
-                className="text-xs sm:text-sm font-medium text-orange-600 hover:text-orange-700 hover:underline transition-colors"
+                className="text-xs sm:text-sm font-medium text-[#E21E26] hover:text-[#C21A20] hover:underline transition-colors"
                 disabled={loading}
               >
                 पासवर्ड भूल गए?
@@ -148,11 +149,10 @@ function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading || !usernameOrEmail || !password}
-              className={`w-full py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
-                loading || !usernameOrEmail || !password
-                  ? 'bg-gray-400'
-                  : 'bg-orange-600 hover:bg-orange-700 active:bg-orange-800'
-              }`}
+              className={`w-full py-2.5 sm:py-3 rounded-xl font-bold text-sm text-white transition-all shadow-lg hover:shadow-[#E21E26]/30 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${loading || !usernameOrEmail || !password
+                ? 'bg-gray-400 shadow-none'
+                : 'bg-gradient-to-r from-[#E21E26] to-[#C21A20]'
+                }`}
             >
               {loading ? (
                 <span className="flex items-center justify-center">

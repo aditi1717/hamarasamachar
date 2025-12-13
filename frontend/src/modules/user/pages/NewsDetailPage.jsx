@@ -25,13 +25,13 @@ function NewsDetailPage() {
     };
 
     checkLoginStatus();
-    
+
     // Listen for storage changes (in case user logs in from another tab)
     window.addEventListener('storage', checkLoginStatus);
-    
+
     // Also check when page regains focus (in case user logs in and navigates back)
     window.addEventListener('focus', checkLoginStatus);
-    
+
     return () => {
       window.removeEventListener('storage', checkLoginStatus);
       window.removeEventListener('focus', checkLoginStatus);
@@ -90,12 +90,12 @@ function NewsDetailPage() {
   useEffect(() => {
     const video = videoRef.current;
     if (!news || news.type !== 'video' || !video || !news.videoUrl) return;
-    
+
     let handleTimeUpdate = null;
-    
+
     const setupVideo = () => {
       video.playbackRate = 2.0; // Fast speed (2x)
-      
+
       if (video.duration && video.duration < 30) {
         // Short video - full loop
       } else {
@@ -108,7 +108,7 @@ function NewsDetailPage() {
         video.addEventListener('timeupdate', handleTimeUpdate);
       }
     };
-    
+
     if (video.readyState >= 2 && video.duration) {
       setupVideo();
     } else {
@@ -118,7 +118,7 @@ function NewsDetailPage() {
       video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
       video.addEventListener('canplay', handleLoadedMetadata, { once: true });
     }
-    
+
     return () => {
       if (handleTimeUpdate) {
         video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -143,7 +143,7 @@ function NewsDetailPage() {
   const colonIndexHindi = news?.title.indexOf('ः') ?? -1;
   let colonIndex = -1;
   let colonChar = '';
-  
+
   if (colonIndexEng !== -1 && colonIndexHindi !== -1) {
     colonIndex = Math.min(colonIndexEng, colonIndexHindi);
     colonChar = colonIndex === colonIndexEng ? ':' : 'ः';
@@ -154,7 +154,7 @@ function NewsDetailPage() {
     colonIndex = colonIndexHindi;
     colonChar = 'ः';
   }
-  
+
   const hasColon = colonIndex !== -1;
   const beforeColon = hasColon ? news?.title.substring(0, colonIndex).trim() : news?.title;
   const afterColon = hasColon ? news?.title.substring(colonIndex + 1).trim() : '';
@@ -229,18 +229,14 @@ function NewsDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-3 sm:py-4">
+      <div className="px-4 sm:px-5 md:px-6 py-4 sm:py-5">
         {/* Heading */}
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 leading-tight">
+        {/* Heading */}
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-5 leading-snug tracking-tight text-gray-900">
           {hasColon ? (
             <>
-              <span style={{ color: headingColor }}>{beforeColon}</span>
-              {afterColon && (
-                <>
-                  <span className="text-black"> {colonChar} </span>
-                  <span className="text-black">{afterColon}</span>
-                </>
-              )}
+              <span className="text-orange-600 block mb-1.5 text-base sm:text-lg font-bold uppercase tracking-wider opacity-90">{beforeColon}</span>
+              <span className="text-gray-900">{afterColon}</span>
             </>
           ) : (
             <span style={{ color: headingColor }}>{beforeColon}</span>
@@ -305,10 +301,10 @@ function NewsDetailPage() {
               className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-colors text-gray-700"
               aria-label="Menu"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 sm:h-6 sm:w-6" 
-                fill="currentColor" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 sm:h-6 sm:w-6"
+                fill="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
@@ -321,11 +317,11 @@ function NewsDetailPage() {
                   onClick={handleShare}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left text-gray-700"
                 >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -336,11 +332,11 @@ function NewsDetailPage() {
                   onClick={handleSave}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left text-gray-700"
                 >
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -376,10 +372,10 @@ function NewsDetailPage() {
               newsId={news.id}
             />
           ))}
-          
+
           {/* Show remaining content with blur if not logged in */}
           {!isLoggedIn && contentSections.length > 1 && (
-            <div 
+            <div
               className="content-sections-container space-y-4 sm:space-y-5 relative blur-md overflow-hidden"
               style={{ maxHeight: '150px', pointerEvents: 'none', touchAction: 'none' }}
             >
@@ -393,7 +389,7 @@ function NewsDetailPage() {
               ))}
             </div>
           )}
-          
+
           {/* Show all content if logged in */}
           {isLoggedIn && contentSections.slice(1).map((section, index) => (
             <ContentSection
@@ -403,36 +399,42 @@ function NewsDetailPage() {
               newsId={news.id}
             />
           ))}
-          
+
           {/* Lock Section - Show if not logged in */}
           {!isLoggedIn && (
-            <div className="flex flex-col items-center gap-4 py-4 sm:py-6 mt-2">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-12 w-12 sm:h-14 sm:w-14 text-gray-400" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
-                />
-              </svg>
-              <p className="text-lg sm:text-xl font-bold text-gray-900 text-center px-4">
-                ज्यादा खबरें पढ़ने के लिए लॉगिन करें
-              </p>
-              <p className="text-sm sm:text-base text-gray-600 text-center px-4">
-                लॉगिन करने के बाद आप बिना रुकावट खबरें पढ़ पाएंगे
-              </p>
-              <button
-                onClick={() => navigate('/login')}
-                className="mt-2 w-full max-w-xs sm:max-w-sm bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-lg text-base sm:text-lg transition-colors shadow-md"
-              >
-                आगे बढ़ें
-              </button>
+            <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 sm:p-8 text-center border border-orange-200 shadow-sm mt-4">
+              <div className="flex flex-col items-center gap-4 relative z-10">
+                <div className="bg-white p-3 rounded-full shadow-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-orange-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    पूरी खबर पढ़ने के लिए लॉगिन करें
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600 max-w-xs mx-auto">
+                    लॉगिन करें और अपने पसंदीदा विषयों पर अनलिमिटेड खबरें पढ़ें
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="mt-2 w-full max-w-xs bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-8 rounded-xl text-base sm:text-lg transition-all shadow-lg hover:shadow-orange-500/30 transform hover:-translate-y-0.5"
+                >
+                  अभी लॉगिन करें
+                </button>
+              </div>
             </div>
           )}
         </div>

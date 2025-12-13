@@ -1,11 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-/* Hindi Font Support - Noto Sans Devanagari */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap');
+#root {
+  min-height: 100vh;
+  background-color: white;
+}
 
 * {
   font-family: 'Noto Sans Devanagari', sans-serif;
-  touch-action: manipulation; /* Prevent double-tap zoom */
+  touch-action: manipulation;
+  /* Prevent double-tap zoom */
 }
 
 /* Prevent zoom on double tap */
@@ -23,7 +27,18 @@ body {
 }
 
 /* Allow text selection for input fields and text content */
-input, textarea, [contenteditable], p, span, div, h1, h2, h3, h4, h5, h6 {
+input,
+textarea,
+[contenteditable],
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   -webkit-user-select: text;
   user-select: text;
 }
@@ -47,6 +62,7 @@ body {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-33.33%);
   }
@@ -85,10 +101,13 @@ body {
 
 /* Hide scrollbar for shorts page */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
 }

@@ -13,7 +13,7 @@ import { DISTRICT_SLUGS } from '../constants/districts';
 function HomePage() {
   const navigate = useNavigate();
   const { categorySlug, districtSlug } = useParams();
-  
+
   // Get category from URL slug or default to 'ब्रेकिंग'
   const getCategoryFromSlug = (slug) => {
     if (!slug) return 'ब्रेकिंग';
@@ -80,8 +80,8 @@ function HomePage() {
     const slug = CATEGORY_SLUGS[category] || 'breaking';
     if (category === 'राजस्थान') {
       // If switching to राजस्थान, keep current district or default to 'all'
-      const districtSlug = selectedDistrict === 'सभी जिले' 
-        ? 'all' 
+      const districtSlug = selectedDistrict === 'सभी जिले'
+        ? 'all'
         : (DISTRICT_SLUGS[selectedDistrict] || 'all');
       navigate(`/category/${slug}/${districtSlug}`, { replace: true });
     } else {
@@ -96,15 +96,15 @@ function HomePage() {
     // Update URL with district slug if राजस्थान category
     if (selectedCategory === 'राजस्थान') {
       const categorySlug = CATEGORY_SLUGS['राजस्थान'] || 'rajasthan';
-      const districtSlug = district === 'सभी जिले' 
-        ? 'all' 
+      const districtSlug = district === 'सभी जिले'
+        ? 'all'
         : (DISTRICT_SLUGS[district] || 'all');
       navigate(`/category/${categorySlug}/${districtSlug}`, { replace: true });
     }
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-t-2xl">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header />
 

@@ -12,7 +12,7 @@ function SplashPage() {
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
     document.body.style.height = '100%';
-    
+
     // Show content after a brief delay
     setTimeout(() => {
       setShowContent(true);
@@ -32,7 +32,7 @@ function SplashPage() {
       {/* Main Content */}
       <div className={`relative z-10 flex flex-col items-center justify-center w-full px-4 transition-opacity duration-500 ${showContent ? 'opacity-100' : 'opacity-0'}`}>
         {/* Logo Container - Rounded with Orange Background */}
-        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full flex items-center justify-center mb-8 shadow-lg p-4" style={{ backgroundColor: '#FF6B35' }}>
+        <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full flex items-center justify-center mb-8 shadow-lg p-4" style={{ backgroundColor: '#E21E26' }}>
           <img
             src={logo}
             alt="हमारा समाचार Logo"
@@ -48,7 +48,7 @@ function SplashPage() {
         {/* Continue Button */}
         <button
           onClick={() => navigate('/login')}
-          className="px-8 py-3 rounded-lg font-semibold text-lg hover:opacity-90 transition-colors shadow-lg text-white" style={{ backgroundColor: '#FF6B35' }}
+          className="px-8 py-2.5 rounded-lg font-semibold text-lg hover:opacity-90 transition-colors shadow-lg text-white" style={{ backgroundColor: '#E21E26' }}
         >
           आगे बढ़ें
         </button>

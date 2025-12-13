@@ -8,28 +8,26 @@ function Form({ children, onSubmit, className = '' }) {
   );
 }
 
-function FormField({ 
-  label, 
-  name, 
-  type = 'text', 
-  value, 
-  onChange, 
-  placeholder = '', 
-  required = false, 
+function FormField({
+  label,
+  name,
+  type = 'text',
+  value,
+  onChange,
+  placeholder = '',
+  required = false,
   error = '',
   disabled = false,
   autoComplete = 'off',
   rows,
   options = [],
-  ...props 
+  ...props
 }) {
-  const inputClasses = `w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-    error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-orange-600 focus:ring-orange-500'
-  } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`;
-  
-  const selectClasses = `w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 transition-colors appearance-none ${
-    error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-orange-600 focus:ring-orange-500'
-  } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`;
+  const inputClasses = `w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 transition-colors ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-[#E21E26] focus:ring-[#E21E26]'
+    } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`;
+
+  const selectClasses = `w-full px-3 sm:px-4 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 transition-colors appearance-none ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-[#E21E26] focus:ring-[#E21E26]'
+    } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`;
 
   return (
     <div className="mb-3 sm:mb-4">
@@ -38,7 +36,7 @@ function FormField({
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      
+
       {type === 'textarea' ? (
         <textarea
           id={name}
@@ -87,7 +85,7 @@ function FormField({
             onChange={onChange}
             required={required}
             disabled={disabled}
-            className="w-16 h-12 rounded-lg border border-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-600 transition-colors"
+            className="w-16 h-12 rounded-lg border border-gray-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26] transition-colors"
             {...props}
           />
           <input
@@ -117,7 +115,7 @@ function FormField({
           {...props}
         />
       )}
-      
+
       {error && (
         <p className="mt-1 text-xs sm:text-sm text-red-600">{error}</p>
       )}
@@ -133,18 +131,18 @@ function FormActions({ children, className = '' }) {
   );
 }
 
-function FormButton({ 
-  type = 'button', 
-  onClick, 
-  disabled = false, 
+function FormButton({
+  type = 'button',
+  onClick,
+  disabled = false,
   loading = false,
   variant = 'primary',
   children,
   className = '',
-  ...props 
+  ...props
 }) {
   const baseClasses = 'px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 rounded-lg font-semibold text-xs sm:text-sm md:text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed';
-  
+
   const variantClasses = {
     primary: 'text-white',
     secondary: 'border-2 bg-transparent',
@@ -155,7 +153,7 @@ function FormButton({
     if (variant === 'primary') {
       return { backgroundColor: COLORS.header.bg };
     } else if (variant === 'secondary') {
-      return { 
+      return {
         borderColor: COLORS.header.bg,
         color: COLORS.header.bg
       };
