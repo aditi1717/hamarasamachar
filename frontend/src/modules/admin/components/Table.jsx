@@ -90,7 +90,7 @@ function Table({
                 <th
                   key={column.key}
                   className={`px-3 sm:px-4 py-2 sm:py-2.5 text-left text-xs sm:text-sm font-semibold text-gray-700 ${sortable && column.sortable !== false ? 'cursor-pointer hover:bg-gray-100' : ''
-                    }`}
+                    } ${column.className || ''}`}
                   onClick={() => sortable && column.sortable !== false && handleSort(column.key)}
                 >
                   <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ function Table({
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900"
+                      className={`px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 ${column.className || ''}`}
                     >
                       {column.render
                         ? column.render(row[column.key], row)

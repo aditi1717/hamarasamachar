@@ -191,21 +191,24 @@ const UserListPage = () => {
         },
         { key: 'id', label: 'ID', sortable: true },
         { key: 'phone', label: 'फ़ोन नंबर' },
-        { key: 'gender', label: 'लिंग' },
+        { key: 'gender', label: 'लिंग', className: 'hidden lg:table-cell' },
         {
             key: 'birthdate',
             label: 'जन्म तिथि',
+            className: 'hidden lg:table-cell',
             render: (val) => new Date(val).toLocaleDateString('hi-IN')
         },
         {
             key: 'selectedCategory',
             label: 'चयनित श्रेणी',
+            className: 'hidden md:table-cell',
             render: (val) => <span className="px-2 py-1 bg-gray-100 rounded text-xs">{val}</span>
         },
         {
             key: 'registrationDate',
             label: 'पंजीकरण',
             sortable: true,
+            className: 'hidden md:table-cell',
             render: (val) => new Date(val).toLocaleDateString('hi-IN')
         },
         {
@@ -284,18 +287,18 @@ const UserListPage = () => {
             <Layout title="उपयोगकर्ता प्रबंधन">
                 <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                            <p className="text-gray-500 font-medium">कुल उपयोगकर्ता</p>
-                            <h3 className="text-3xl font-bold text-gray-900">{stats.total}</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+                        <div className="bg-white p-3 md:p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <p className="text-gray-500 font-medium text-xs md:text-base">कुल उपयोगकर्ता</p>
+                            <h3 className="text-xl md:text-3xl font-bold text-gray-900">{stats.total}</h3>
                         </div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                            <p className="text-gray-500 font-medium">सक्रिय उपयोगकर्ता</p>
-                            <h3 className="text-3xl font-bold text-green-600">{stats.active}</h3>
+                        <div className="bg-white p-3 md:p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <p className="text-gray-500 font-medium text-xs md:text-base">सक्रिय</p>
+                            <h3 className="text-xl md:text-3xl font-bold text-green-600">{stats.active}</h3>
                         </div>
-                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                            <p className="text-gray-500 font-medium">नए उपयोगकर्ता (7 दिन)</p>
-                            <h3 className="text-3xl font-bold text-blue-600">{stats.newUsers}</h3>
+                        <div className="bg-white p-3 md:p-6 rounded-xl border border-gray-100 shadow-sm col-span-2 md:col-span-1">
+                            <p className="text-gray-500 font-medium text-xs md:text-base">नए (7 दिन)</p>
+                            <h3 className="text-xl md:text-3xl font-bold text-blue-600">{stats.newUsers}</h3>
                         </div>
                     </div>
 
@@ -332,7 +335,7 @@ const UserListPage = () => {
 
                         <button
                             onClick={handleExportCSV}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm md:text-base"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -359,7 +362,7 @@ const UserListPage = () => {
                                 { label: 'ब्लॉक (Blocked)', value: 'Blocked' }
                             ]}
                         />
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             <Form.Field
                                 type="date"
                                 value={filters.startDate}

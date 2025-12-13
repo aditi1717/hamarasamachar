@@ -119,17 +119,19 @@ function NewsListPage() {
             key: 'category',
             label: 'श्रेणी',
             sortable: true,
+            className: 'hidden md:table-cell',
             render: (val) => (
                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                     {val}
                 </span>
             )
         },
-        { key: 'author', label: 'लेखक', sortable: true },
+        { key: 'author', label: 'लेखक', sortable: true, className: 'hidden lg:table-cell' },
         {
             key: 'date',
             label: 'दिनांक',
             sortable: true,
+            className: 'hidden lg:table-cell',
             render: (val) => new Date(val).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' })
         },
         {
@@ -260,9 +262,9 @@ function NewsListPage() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                         <button
                             onClick={() => navigate('/admin/news/create')}
-                            className="px-4 py-2 bg-[#E21E26] text-white rounded-lg hover:bg-[#C21A20] transition-colors font-semibold flex items-center gap-2"
+                            className="px-3 py-1.5 md:px-4 md:py-2 bg-[#E21E26] text-white rounded-lg hover:bg-[#C21A20] transition-colors font-semibold flex items-center gap-2 text-sm md:text-base"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M5 12h14" />
                                 <path d="M12 5v14" />
                             </svg>
@@ -272,12 +274,12 @@ function NewsListPage() {
                         {/* Bulk Actions */}
                         {selectedItems.length > 0 && (
                             <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-gray-200 shadow-sm animate-fade-in">
-                                <span className="px-3 text-sm font-medium text-gray-600 border-r border-gray-200">
+                                <span className="px-2 md:px-3 text-xs md:text-sm font-medium text-gray-600 border-r border-gray-200">
                                     {selectedItems.length} चयनित
                                 </span>
                                 <button
                                     onClick={() => handleBulkAction('publish')}
-                                    className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                    className="p-1.5 md:p-2 text-green-600 hover:bg-green-50 rounded"
                                     title="प्रकाशित करें"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -287,7 +289,7 @@ function NewsListPage() {
                                 </button>
                                 <button
                                     onClick={() => handleBulkAction('delete')}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                    className="p-1.5 md:p-2 text-red-600 hover:bg-red-50 rounded"
                                     title="हटाएं"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

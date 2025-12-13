@@ -104,7 +104,7 @@ function AdminDashboard() {
           </div>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-3 sm:mb-4 animate-slide-up stagger-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-3 sm:mb-4 animate-slide-up stagger-1">
             {/* Total News Count - Enhanced */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md hover:border-[#E21E26]/20 transition-all duration-300">
               <div className="flex items-center justify-between mb-4">
@@ -248,7 +248,7 @@ function AdminDashboard() {
             </div>
 
             {/* Recent Activity - Enhanced (Double Width) */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:col-span-2 lg:col-span-2 hover:shadow-md hover:border-[#E21E26]/20 transition-all duration-300">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 col-span-1 md:col-span-2 lg:col-span-2 hover:shadow-md hover:border-[#E21E26]/20 transition-all duration-300">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-gray-800">हाल की गतिविधि</h3>
                 <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
