@@ -24,6 +24,7 @@ function NewsFormPage() {
         district: '',
         featuredImage: '',
         videoUrl: '',
+        reelUrl: '',
         isBreakingNews: false,
         content: '',
         author: '',
@@ -57,6 +58,7 @@ function NewsFormPage() {
                     district: '',
                     featuredImage: 'https://via.placeholder.com/600x400',
                     videoUrl: '',
+                    reelUrl: '',
                     isBreakingNews: true,
                     content: '<p>यह एक नमूना समाचार सामग्री है। <br/> कृपया इसे संपादित करें।</p>',
                     author: 'एडमिन',
@@ -188,6 +190,20 @@ function NewsFormPage() {
                                         ) : (
                                             <img src={formData.featuredImage} alt="Preview" className="w-full h-32 object-cover rounded border" />
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Reel URL Field */}
+                                <Form.Field
+                                    label="रील URL (Reel URL) (वैकल्पिक)"
+                                    name="reelUrl"
+                                    value={formData.reelUrl}
+                                    onChange={handleChange}
+                                    placeholder="रील/शॉर्ट्स वीडियो URL दर्ज करें..."
+                                />
+                                {formData.reelUrl && (
+                                    <div className="mt-2">
+                                        <div className="text-xs text-purple-600 break-all">Reel URL: {formData.reelUrl}</div>
                                     </div>
                                 )}
 

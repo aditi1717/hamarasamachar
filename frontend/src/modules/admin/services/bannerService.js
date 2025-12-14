@@ -114,13 +114,29 @@ export const bannerService = {
     return true;
   },
 
-  // Get banners by position
-  getByPosition: async (position) => {
+  // Get banners by position and optionally by category
+  getByPosition: async (position, category = null) => {
     await new Promise(resolve => setTimeout(resolve, 200));
     const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
     return banners
-      .filter(banner => banner.position === position && banner.status === 'active')
-      .sort((a, b) => a.order - b.order);
+      .filter(banner => {
+        const positionMatch = banner.position === position && banner.status === 'active';
+        if (!positionMatch) return false;
+        
+        // If category is specified, filter by category
+        // If banner has no category (empty string or undefined), show for all categories
+        // If banner has a category, only show if it matches
+        if (category) {
+          return !banner.category || banner.category === '' || banner.category === category;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        // For new format with images array, sort by first image's order
+        const aOrder = a.images && a.images.length > 0 ? a.images[0].order : (a.order || 0);
+        const bOrder = b.images && b.images.length > 0 ? b.images[0].order : (b.order || 0);
+        return aOrder - bOrder;
+      });
   }
 };
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const Modal = ({ isOpen, onClose, title, children, footer }) => {
+const Modal = ({ isOpen, onClose, title, children, footer, maxWidth }) => {
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape') onClose();
@@ -20,7 +20,7 @@ const Modal = ({ isOpen, onClose, title, children, footer }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             <div
-                className="bg-white rounded-xl shadow-2xl w-full max-w-lg transform transition-all scale-100 opacity-100"
+                className={`bg-white rounded-xl shadow-2xl w-full ${maxWidth || 'max-w-lg'} transform transition-all scale-100 opacity-100`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

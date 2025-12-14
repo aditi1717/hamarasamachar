@@ -17,6 +17,7 @@ import FeedbackListPage from './modules/admin/pages/FeedbackListPage';
 import RatingsPage from './modules/admin/pages/RatingsPage';
 import UserListPage from './modules/admin/pages/UserListPage';
 import UserDetailsPage from './modules/admin/pages/UserDetailsPage';
+import UserEditPage from './modules/admin/pages/UserEditPage';
 import EpaperPage from './modules/admin/pages/EpaperPage';
 import SplashPage from './modules/user/pages/SplashPage';
 import LoginPage from './modules/user/pages/LoginPage';
@@ -82,6 +83,7 @@ function App() {
           <Route path="/admin/feedback" element={<FeedbackListPage />} />
           <Route path="/admin/ratings" element={<RatingsPage />} />
           <Route path="/admin/users" element={<UserListPage />} />
+          <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
           <Route path="/admin/users/:id" element={<UserDetailsPage />} />
           <Route path="/admin/epaper" element={<EpaperPage />} />
         </Routes>

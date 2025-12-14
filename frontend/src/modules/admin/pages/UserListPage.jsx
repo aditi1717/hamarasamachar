@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Table from '../components/Table';
 import Form from '../components/Form';
-import Modal from '../components/Modal';
 import { userService } from '../services/userService';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
@@ -25,10 +24,6 @@ const UserListPage = () => {
         startDate: '',
         endDate: ''
     });
-
-    // Edit Modal State
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -120,18 +115,6 @@ const UserListPage = () => {
             } catch (error) {
                 showToast('कार्रवाई विफल रही', 'error');
             }
-        }
-    };
-
-    const handleEditSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await userService.updateUser(editingUser.id, editingUser);
-            setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
-            showToast('उपयोगकर्ता विवरण अपडेट किया गया', 'success');
-            setIsEditModalOpen(false);
-        } catch (error) {
-            showToast('अपडेट करने में विफल', 'error');
         }
     };
 
@@ -243,10 +226,7 @@ const UserListPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
             ),
-            onClick: (row) => {
-                setEditingUser({ ...row });
-                setIsEditModalOpen(true);
-            },
+            onClick: (row) => navigate(`/admin/users/edit/${row.id}`),
             variant: 'secondary'
         },
         {
@@ -387,83 +367,6 @@ const UserListPage = () => {
                         sortable={true}
                         emptyMessage="कोई उपयोगकर्ता नहीं मिला"
                     />
-
-                    {/* Edit Modal */}
-                    <Modal
-                        isOpen={isEditModalOpen}
-                        onClose={() => setIsEditModalOpen(false)}
-                        title="उपयोगकर्ता संपादित करें"
-                    >
-                        {editingUser && (
-                            <form onSubmit={handleEditSubmit} className="space-y-4">
-                                <Form.Field
-                                    label="फ़ोन नंबर"
-                                    value={editingUser.phone}
-                                    disabled={true}
-                                    type="text"
-                                />
-
-                                <Form.Field
-                                    label="लिंग"
-                                    type="select"
-                                    value={editingUser.gender}
-                                    onChange={(e) => setEditingUser({ ...editingUser, gender: e.target.value })}
-                                    options={[
-                                        { label: 'पुरुष', value: 'Male' },
-                                        { label: 'महिला', value: 'Female' },
-                                        { label: 'अन्य', value: 'Other' }
-                                    ]}
-                                />
-
-                                <Form.Field
-                                    label="जन्म तिथि"
-                                    type="date"
-                                    value={editingUser.birthdate ? editingUser.birthdate.split('T')[0] : ''}
-                                    onChange={(e) => setEditingUser({ ...editingUser, birthdate: e.target.value })}
-                                />
-
-                                <Form.Field
-                                    label="श्रेणी"
-                                    type="select"
-                                    value={editingUser.selectedCategory}
-                                    onChange={(e) => setEditingUser({ ...editingUser, selectedCategory: e.target.value })}
-                                    options={[
-                                        { label: 'राजनीति', value: 'Politics' },
-                                        { label: 'खेल', value: 'Sports' },
-                                        { label: 'टेक्नोलॉजी', value: 'Technology' },
-                                        { label: 'मनोरंजन', value: 'Entertainment' }
-                                    ]}
-                                />
-
-                                <Form.Field
-                                    label="स्थिति"
-                                    type="select"
-                                    value={editingUser.status}
-                                    onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
-                                    options={[
-                                        { label: 'सक्रिय', value: 'Active' },
-                                        { label: 'ब्लॉक', value: 'Blocked' }
-                                    ]}
-                                />
-
-                                <div className="flex justify-end gap-3 mt-6">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditModalOpen(false)}
-                                        className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
-                                    >
-                                        रद्द करें
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-[#E21E26] text-white rounded hover:bg-[#C21A20]"
-                                    >
-                                        सेव करें
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </Modal>
                 </div>
             </Layout>
         </ProtectedRoute>

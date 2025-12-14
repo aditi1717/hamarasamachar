@@ -434,11 +434,10 @@
 - Export feedback (CSV)
 
 **Feedback Features:**
-- Feedback statistics (total, by type, by status)
+- 
 - Recent feedback highlight
 - Unread feedback count badge
 - Feedback response template
-- Feedback analytics (trends over time)
 
 ### 3.2 Ratings Analytics
 **Location:** `/admin/ratings`
@@ -446,8 +445,6 @@
 **Ratings Dashboard:**
 - Overall average rating (displayed prominently)
 - Total ratings count
-- Rating distribution chart (1-5 stars, bar chart)
-- Rating trends over time (line chart)
 - Recent ratings list
 
 **Rating Details:**
@@ -459,7 +456,6 @@
 - Sort by date or rating
 
 **Rating Features:**
-- Rating statistics (average, distribution)
 - Rating comments view
 - Export ratings data
 - Rating response (thank users for ratings)
@@ -471,11 +467,11 @@
 
 **User List:**
 - List of all registered users
-- Display: Name, Phone, Email, Registration Date, Status, Actions
-- Search users (by name, phone, email)
+- Display: Phone, gender, birthdate, Status, Actions,selectedCategory  ye sab hum user se le rahe hain phone mandatryt hai wahan bss
+- Search users (by phone)
 - Filter by status (Active/Blocked)
 - Filter by registration date
-- Sort by name, date, activity
+
 
 **User Actions:**
 - View user profile
@@ -487,7 +483,6 @@
 
 **User Details Page:**
 - User profile information
-- User activity history
 - User bookmarks list
 - User feedback/ratings given
 - User statistics (total bookmarks, views, etc.)

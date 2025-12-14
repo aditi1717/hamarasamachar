@@ -6,6 +6,7 @@ import CategoryMenu from '../components/CategoryMenu';
 import DistrictFilter from '../components/DistrictFilter';
 import NewsCard from '../components/NewsCard';
 import BottomNavbar from '../components/BottomNavbar';
+import Banner from '../components/Banner';
 import { getAllNews, getNewsByCategory } from '../data/dummyNewsData';
 import { CATEGORIES, CATEGORY_SLUGS } from '../constants/categories';
 import { DISTRICT_SLUGS } from '../constants/districts';
@@ -127,8 +128,12 @@ function HomePage() {
         <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-3 pb-20 sm:pb-24">
           <div className="space-y-0">
             {newsData.length > 0 ? (
-              newsData.map((news) => (
-                <NewsCard key={news.id} news={news} />
+              newsData.map((news, index) => (
+                <div key={news.id}>
+                  <NewsCard news={news} />
+                  {/* Show banner after each news item - filtered by category */}
+                  <Banner position="news_feed" category={selectedCategory} />
+                </div>
               ))
             ) : (
               <div className="text-center py-12">

@@ -304,30 +304,6 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>ई-पेपर</span>
           </Link>
           <Link
-            to="/admin/comments"
-            onClick={handleNavClick}
-            className="w-full hidden md:flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"
-            style={{
-              backgroundColor: location.pathname.startsWith('/admin/comments') ? `${COLORS.header.bg}15` : 'transparent',
-              color: location.pathname.startsWith('/admin/comments') ? COLORS.header.bg : '#4B5563'
-            }}
-            onMouseEnter={(e) => {
-              if (!location.pathname.startsWith('/admin/comments')) {
-                e.target.style.backgroundColor = '#F3F4F6';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!location.pathname.startsWith('/admin/comments')) {
-                e.target.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-            </svg>
-            <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>कमेंट्स</span>
-          </Link>
-          <Link
             to="/admin/profile"
             onClick={handleNavClick}
             className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"

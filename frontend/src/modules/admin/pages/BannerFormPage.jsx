@@ -4,6 +4,7 @@ import { bannerService } from '../services/bannerService';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import Form from '../components/Form';
+import { CATEGORIES } from '../../user/constants/categories';
 
 function BannerFormPage() {
   const navigate = useNavigate();
@@ -13,7 +14,8 @@ function BannerFormPage() {
   const [formData, setFormData] = useState({
     title: '',
     images: [{ url: '', link: '', order: 1 }],
-    position: 'homepage_top',
+    position: 'news_feed',
+    category: '',
     status: 'active',
     target: '_blank'
   });
@@ -38,7 +40,8 @@ function BannerFormPage() {
         setFormData({
           title: banner.title || '',
           images: images,
-          position: banner.position || 'homepage_top',
+          position: banner.position || 'news_feed',
+          category: banner.category || '',
           status: banner.status || 'active',
           target: banner.target || '_blank'
         });
@@ -302,6 +305,7 @@ function BannerFormPage() {
                   required
                   disabled={loading}
                   options={[
+                    { value: 'news_feed', label: 'न्यूज़ फीड (हर न्यूज़ के बाद)' },
                     { value: 'homepage_top', label: 'होमपेज शीर्ष' },
                     { value: 'homepage_middle', label: 'होमपेज मध्य' },
                     { value: 'category_page', label: 'श्रेणी पेज' },
@@ -323,6 +327,20 @@ function BannerFormPage() {
                   ]}
                 />
               </div>
+
+              <Form.Field
+                label="श्रेणी (Category) *"
+                name="category"
+                type="select"
+                value={formData.category}
+                onChange={handleInputChange}
+                required
+                disabled={loading}
+                options={[
+                  { value: '', label: 'सभी श्रेणियाँ' },
+                  ...CATEGORIES.map(cat => ({ value: cat, label: cat }))
+                ]}
+              />
 
 
               <Form.Actions>

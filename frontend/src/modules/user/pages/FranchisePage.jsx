@@ -4,15 +4,6 @@ import { useNavigate } from 'react-router-dom';
 function FranchisePage() {
   const navigate = useNavigate();
 
-  const contactInfo = [
-    {
-      name: 'रामनिवास मंडोलिया',
-      designation: 'मुख्य संपादक',
-      phone: '9461162346',
-      englishName: 'Ramniwas Mandoliya',
-      englishDesignation: 'Chief Editor'
-    }
-  ];
 
   const handlePhoneClick = (phone) => {
     window.location.href = `tel:${phone}`;
@@ -55,11 +46,11 @@ function FranchisePage() {
             <div className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed space-y-3">
               <p>
                 "हमारा समाचार" दैनिक समाचार पत्र की ओर से दिनांक 03/12/2025 से सम्पूर्ण राजस्थान स्टेट के लिए
-                स्टेट फ्रेंचाइजी अधिकृत किया है जिसमें आकाश पांडे मैनेजर है। "हमारा समाचार" की ओर से स्टेट
+                स्टेट फ्रेंचाइजी अधिकृत किया है जिसमें प्रबंधक ही सभी कार्य संभालेगा। "हमारा समाचार" की ओर से स्टेट
                 फ्रेंचाइजी अधिकृत इसलिए किया गया है जिससे कि संपूर्ण राजस्थान में सभी जिलों व तहसील में
                 "हमारा समाचार" समाचार पत्र के लिए प्रत्येक जिले में फ्रेंचाइजी दी जाएगी, जिसमें की एक
                 सिक्योरिटी राशि होगी, जिस भी व्यक्ति को "हमारा समाचार" समाचार पत्र में जिले की फ्रेंचाइजी
-                लेनी होगी वह एक तय सिक्योरिटी राशि मैनेजर आकाश पांडे को देकर जिले की फ्रेंचाइजी ले सकते है।
+                लेनी होगी वह एक तय सिक्योरिटी राशि मैनेजर को देकर जिले की फ्रेंचाइजी ले सकते है।
               </p>
               <p>
                 इसी प्रकार जिले के फ्रेंचाइजी होल्डर को ये अधिकृत किया जाएगा कि वह अपने जिले की संपूर्ण
@@ -164,7 +155,6 @@ function FranchisePage() {
           <div className="bg-[#E21E26]/5 rounded-lg p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">मैनेजर</h2>
             <div className="text-sm sm:text-base text-gray-700">
-              <p className="font-semibold text-lg mb-2">आकाश पांडे</p>
               <p className="text-gray-600">राजस्थान हेड फ्रेंचाइजी मैनेजर</p>
             </div>
           </div>
@@ -187,37 +177,23 @@ function FranchisePage() {
               </button>
             </div>
 
-            {/* Editorial Team */}
-            <div className="space-y-3 sm:space-y-4">
-              {contactInfo.map((member, index) => (
-                <div
-                  key={index}
-                  className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                        {member.name}
-                      </h3>
-                      <p className="text-sm sm:text-base text-gray-600 mb-1">
-                        {member.designation}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {member.englishName} - {member.englishDesignation}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handlePhoneClick(member.phone)}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#E21E26] text-white rounded-lg hover:bg-[#C21A20] transition-colors text-sm sm:text-base font-medium"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span>{member.phone}</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+            {/* Franchise Contact */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                Rajasthan head frenchise
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600 mb-2">
+                Mobile number
+              </p>
+              <button
+                onClick={() => handlePhoneClick('8824839740')}
+                className="flex items-center gap-2 text-[#E21E26] hover:text-[#C21A20] transition-colors text-base sm:text-lg font-medium"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span>8824839740</span>
+              </button>
             </div>
           </div>
         </div>
