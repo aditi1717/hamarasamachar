@@ -1,9 +1,19 @@
+import { useNavigate } from 'react-router-dom';
+
 function ContentSection({ section, onShare, newsId = null }) {
+  const navigate = useNavigate();
   if (!section || !section.type) return null;
 
   const handleShare = () => {
     if (onShare) {
       onShare();
+    }
+  };
+
+  const handleVideoClick = () => {
+    if (section.type === 'video' && section.url && newsId) {
+      // Navigate to reels section with video ID
+      navigate(`/shorts?video=${newsId}`);
     }
   };
 
@@ -60,7 +70,10 @@ function ContentSection({ section, onShare, newsId = null }) {
       if (!section.url) return null;
       return (
         <div className="my-4 sm:my-5 border border-gray-200 rounded-lg overflow-hidden bg-white">
-          <div className="w-full h-64 sm:h-80 md:h-96 relative bg-gray-200">
+          <div 
+            className="w-full h-64 sm:h-80 md:h-96 relative bg-gray-200 cursor-pointer"
+            onClick={handleVideoClick}
+          >
             <video
               src={section.url}
               className="w-full h-full object-cover"

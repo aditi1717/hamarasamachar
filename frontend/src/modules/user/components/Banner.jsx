@@ -60,20 +60,28 @@ function Banner({ position = 'news_feed', category = null }) {
   }
 
   return (
-    <div className="w-full my-4 sm:my-5 flex justify-center">
-      <div 
-        className="w-full max-w-full cursor-pointer"
-        onClick={() => banner && handleBannerClick(banner)}
-      >
-        <img
-          src={bannerImage}
-          alt={banner?.title || 'Advertisement'}
-          className="w-full h-auto rounded-lg"
-          onError={(e) => {
-            // If image fails, try another placeholder
-            e.target.src = getPlaceholderBanner();
-          }}
-        />
+    <div className="w-full my-4 sm:my-5">
+      <div className="w-full max-w-full border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <button
+          className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm sm:text-base font-medium transition-colors"
+          onClick={() => banner && handleBannerClick(banner)}
+        >
+          विज्ञापन
+        </button>
+        <div 
+          className="w-full cursor-pointer"
+          onClick={() => banner && handleBannerClick(banner)}
+        >
+          <img
+            src={bannerImage}
+            alt={banner?.title || 'Advertisement'}
+            className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+            onError={(e) => {
+              // If image fails, try another placeholder
+              e.target.src = getPlaceholderBanner();
+            }}
+          />
+        </div>
       </div>
     </div>
   );

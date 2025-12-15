@@ -145,8 +145,17 @@ function NewsCard({ news }) {
     };
   }, [showMenu]);
 
+
   const handleCardClick = () => {
     navigate(`/news/${news.id}`);
+  };
+
+  const handleVideoClick = (e) => {
+    e.stopPropagation(); // Prevent card click navigation
+    if (isVideo && news.videoUrl) {
+      // Navigate to shorts page with video ID
+      navigate(`/shorts?video=${news.id}`);
+    }
   };
 
   return (
@@ -155,7 +164,10 @@ function NewsCard({ news }) {
       <div className="flex flex-col gap-3 mb-3 cursor-pointer" onClick={handleCardClick}>
 
         {/* Top - Video/Photo (Full Width) */}
-        <div className="w-full aspect-video rounded-lg overflow-hidden relative bg-gray-100">
+        <div
+          className={`w-full aspect-video rounded-lg overflow-hidden relative bg-gray-100 ${isVideo ? 'cursor-pointer' : ''}`}
+          onClick={isVideo ? handleVideoClick : undefined}
+        >
           {isVideo && news.videoUrl ? (
             <>
               {/* Video Preview - GIF jaisa (fast speed, chhota portion loop) */}
@@ -308,6 +320,7 @@ function NewsCard({ news }) {
           )}
         </div>
       </div>
+
     </div>
   );
 }

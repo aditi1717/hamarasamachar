@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getNewsById, getContentSections } from '../data/dummyNewsData';
 import BottomNavbar from '../components/BottomNavbar';
 import ContentSection from '../components/ContentSection';
-import { toggleBookmark, isNewsBookmarked } from '../utils/bookmarkUtils';
 
 function NewsDetailPage() {
   const { id } = useParams();
@@ -11,9 +10,6 @@ function NewsDetailPage() {
   const [news, setNews] = useState(null);
   const [videoDuration, setVideoDuration] = useState(null);
   const videoRef = useRef(null);
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Check login status
@@ -72,7 +68,6 @@ function NewsDetailPage() {
     const newsItem = getNewsById(id);
     if (newsItem) {
       setNews(newsItem);
-      setIsBookmarked(isNewsBookmarked(newsItem.id));
     } else {
       navigate('/category/breaking');
     }
@@ -170,37 +165,7 @@ function NewsDetailPage() {
       navigator.clipboard.writeText(window.location.href);
       alert('लिंक कॉपी हो गया!');
     }
-    setShowMenu(false);
   };
-
-  const handleSave = () => {
-    if (!news) return;
-    const bookmarked = toggleBookmark(news.id);
-    setIsBookmarked(bookmarked);
-    if (bookmarked) {
-      alert('समाचार सेव हो गया!');
-    } else {
-      alert('समाचार सेव हटा दिया गया!');
-    }
-    setShowMenu(false);
-  };
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMenu]);
 
   if (!news) {
     return (
@@ -245,8 +210,15 @@ function NewsDetailPage() {
           </h1>
 
           {/* Video/Photo Section */}
-          <div className="mb-4 sm:mb-5">
-            <div className="w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden relative bg-gray-200">
+          <div className="mb-4 sm:mb-5 border border-gray-200 rounded-lg overflow-hidden bg-white">
+            <div 
+              className={`w-full h-48 sm:h-64 md:h-80 lg:h-96 relative bg-gray-200 ${news.type === 'video' && news.videoUrl ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (news.type === 'video' && news.videoUrl) {
+                  navigate(`/shorts?video=${news.id}`);
+                }
+              }}
+            >
               {news.type === 'video' && news.videoUrl ? (
                 <>
                   <video
@@ -291,12 +263,31 @@ function NewsDetailPage() {
                 </div>
               )}
             </div>
+            
+            {/* Share Button below Video/Image */}
+            {news.type === 'video' && news.videoUrl && (
+              <button
+                onClick={handleShare}
+                className="w-full flex items-center justify-center gap-2 py-2 sm:py-2.5 px-4 bg-gray-100 hover:bg-gray-200 transition-colors text-sm sm:text-base font-medium text-gray-700"
+                aria-label="Share Video"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 w-5" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span>शेयर करें</span>
+              </button>
+            )}
           </div>
 
 
-          {/* Author/Date Info and Menu Row */}
-          <div className="flex items-center justify-between mb-4 sm:mb-5">
-            {/* Author and Date Info */}
+          {/* Author/Date Info */}
+          <div className="mb-4 sm:mb-5">
             <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
               {news.author && (
                 <span className="font-medium text-gray-900">द्वारा: {news.author}</span>
@@ -306,59 +297,6 @@ function NewsDetailPage() {
               )}
               {news.date && (
                 <span>{new Date(news.date).toLocaleDateString('hi-IN')}</span>
-              )}
-            </div>
-
-            {/* 3 Dots Menu */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full hover:bg-gray-100 transition-colors text-gray-700"
-                aria-label="Menu"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 sm:h-6 sm:w-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              </button>
-
-              {showMenu && (
-                <div className="absolute top-full right-0 mt-1 w-40 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  <button
-                    onClick={handleShare}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left text-gray-700"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    <span className="text-sm sm:text-base font-medium">शेयर करें</span>
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left text-gray-700"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className={`h-5 w-5 ${isBookmarked ? "text-[#E21E26]" : ""}`}
-                      fill={isBookmarked ? "currentColor" : "none"}
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    <span className="text-sm sm:text-base font-medium">{isBookmarked ? 'हटाएं' : 'सेव करें'}</span>
-                  </button>
-                </div>
               )}
             </div>
           </div>

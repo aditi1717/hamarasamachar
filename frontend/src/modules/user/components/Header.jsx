@@ -8,6 +8,10 @@ function Header() {
     navigate('/notifications');
   };
 
+  const handleFranchiseClick = () => {
+    navigate('/franchise');
+  };
+
   return (
     <header
       className="sticky top-0 z-20 w-full overflow-hidden"
@@ -24,8 +28,25 @@ function Header() {
           />
         </div>
 
-        {/* Right Icons - Only Bell */}
+        {/* Right Icons - Franchise & Bell */}
         <div className="flex items-center gap-3 ml-auto">
+          {/* Franchise Icon */}
+          <button
+            onClick={handleFranchiseClick}
+            className="text-white hover:opacity-80 transition-opacity flex-shrink-0"
+            aria-label="Franchise"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 sm:h-7 sm:w-7"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+
           {/* Bell Icon */}
           <button
             onClick={handleBellClick}

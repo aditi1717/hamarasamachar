@@ -343,7 +343,7 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden transition-all duration-300" style={{ maxHeight: '100vh' }}>
         {/* Header - Sticky */}
         <div className="flex-none z-10 sticky top-0">
           <Header
@@ -386,7 +386,7 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
         </div>
 
         {/* Content - Scrollable */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50" style={{ minHeight: 0 }}>
           {children}
         </main>
       </div>

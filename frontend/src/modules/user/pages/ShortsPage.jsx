@@ -1,28 +1,82 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getAllNews } from '../data/dummyNewsData';
 import logo from '../assets/samachar-logo.png';
 import BottomNavbar from '../components/BottomNavbar';
 
 function ShortsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const videoIdFromUrl = searchParams.get('video');
   const [videoNews, setVideoNews] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef(null);
   const videoRefs = useRef({});
   const [isPlaying, setIsPlaying] = useState({});
+  const [disableScroll, setDisableScroll] = useState(false);
 
   useEffect(() => {
     // Get all video news items
     const allNews = getAllNews();
     const videos = allNews.filter(news => news.type === 'video' && news.videoUrl);
     setVideoNews(videos);
-  }, []);
+
+    // If video ID is in URL, find and scroll to that video
+    if (videoIdFromUrl && videos.length > 0) {
+      const videoIndex = videos.findIndex(v => v.id.toString() === videoIdFromUrl);
+      if (videoIndex !== -1) {
+        setCurrentIndex(videoIndex);
+        // Disable scrolling when coming from content
+        setDisableScroll(true);
+        // Scroll to the video after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          const container = containerRef.current;
+          if (container) {
+            const videoElement = container.querySelector(`[data-video-id="${videoIdFromUrl}"]`);
+            if (videoElement) {
+              videoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Auto-play the video after scrolling
+              setTimeout(() => {
+                const video = videoRefs.current[videoIdFromUrl];
+                if (video) {
+                  video.play().catch(() => { });
+                  setIsPlaying(prev => ({ ...prev, [videoIdFromUrl]: true }));
+                }
+              }, 500);
+            }
+          }
+        }, 300);
+      }
+    }
+  }, [videoIdFromUrl]);
+
+  // Disable scroll when video is opened from content
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !disableScroll) return;
+
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+
+    // Prevent all scroll events
+    container.addEventListener('wheel', preventScroll, { passive: false });
+    container.addEventListener('touchmove', preventScroll, { passive: false });
+    container.style.overflow = 'hidden';
+
+    return () => {
+      container.removeEventListener('wheel', preventScroll);
+      container.removeEventListener('touchmove', preventScroll);
+      container.style.overflow = '';
+    };
+  }, [disableScroll]);
 
   // Handle scroll to detect which video is in view
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || videoNews.length === 0) return;
+    if (!container || videoNews.length === 0 || disableScroll) return;
 
     const handleScroll = () => {
       const containerRect = container.getBoundingClientRect();
@@ -89,7 +143,7 @@ function ShortsPage() {
       container.removeEventListener('scroll', throttledHandleScroll);
       if (scrollTimeout) clearTimeout(scrollTimeout);
     };
-  }, [videoNews, currentIndex]);
+  }, [videoNews, currentIndex, disableScroll]);
 
   // Auto-play first video on mount
   useEffect(() => {
@@ -226,12 +280,13 @@ function ShortsPage() {
       {/* Video Container - Scrollable like Instagram Reels */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide scroll-smooth"
-        style={{ scrollBehavior: 'smooth' }}
+        className={`h-full w-full ${disableScroll ? 'overflow-hidden' : 'overflow-y-scroll snap-y snap-mandatory'} scrollbar-hide scroll-smooth`}
+        style={{ scrollBehavior: disableScroll ? 'auto' : 'smooth' }}
       >
         {videoNews.map((news, index) => (
           <div
             key={news.id}
+            data-video-id={news.id}
             className="video-item h-[100dvh] w-full snap-start snap-always relative flex items-center justify-center bg-black pb-[80px]"
           >
             {/* Video */}

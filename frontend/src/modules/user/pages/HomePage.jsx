@@ -131,8 +131,8 @@ function HomePage() {
               newsData.map((news, index) => (
                 <div key={news.id}>
                   <NewsCard news={news} />
-                  {/* Show banner after each news item - filtered by category */}
-                  <Banner position="news_feed" category={selectedCategory} />
+                  {/* Show banner only after the first news item */}
+                  {index === 0 && <Banner position="news_feed" category={selectedCategory} />}
                 </div>
               ))
             ) : (
