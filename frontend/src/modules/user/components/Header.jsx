@@ -29,22 +29,44 @@ function Header() {
         </div>
 
         {/* Right Icons - Franchise & Bell */}
-        <div className="flex items-center gap-3 ml-auto">
-          {/* Franchise Icon */}
+        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          {/* Franchise Button - Premium Style */}
           <button
             onClick={handleFranchiseClick}
-            className="text-white hover:opacity-80 transition-opacity flex-shrink-0"
-            aria-label="Franchise"
+            className="relative group flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 md:px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+              boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+            }}
+            aria-label="Franchise Information"
           >
+            {/* Store Icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 sm:h-7 sm:w-7"
-              fill="none"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              fill="currentColor"
+              style={{ color: '#8B0000' }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
             </svg>
+
+            {/* Text */}
+            <span
+              className="text-[10px] sm:text-xs font-bold whitespace-nowrap"
+              style={{ color: '#8B0000' }}
+            >
+              राजस्थान हेड फ्रेंचाइजी
+            </span>
+
+            {/* Shine Effect on Hover */}
+            <div
+              className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                animation: 'shine 1.5s infinite'
+              }}
+            />
           </button>
 
           {/* Bell Icon */}

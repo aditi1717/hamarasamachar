@@ -181,3 +181,13 @@ h6 {
 .stagger-3 {
     animation-delay: 300ms;
 }
+
+/* Shine Animation for Franchise Button */
+@keyframes shine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
