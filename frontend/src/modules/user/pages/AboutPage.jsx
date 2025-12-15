@@ -7,15 +7,24 @@ function AboutPage() {
   return (
     <div className="min-h-screen bg-white pb-20 sm:pb-24 page-transition">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 border-b border-gray-200" style={{ backgroundColor: '#E21E26' }}>
         <button
           onClick={() => navigate(-1)}
-          className="text-[#E21E26] text-xl sm:text-2xl font-bold hover:opacity-80 transition-opacity"
+          className="text-white hover:opacity-80 transition-opacity p-1 flex items-center justify-center"
           aria-label="Back"
         >
-          ‹
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
-        <h2 className="text-sm sm:text-base font-bold text-gray-800">हमारे बारे में</h2>
+        <h2 className="text-sm sm:text-base font-bold text-white">हमारे बारे में</h2>
         <div className="w-6 sm:w-8"></div>
       </div>
 

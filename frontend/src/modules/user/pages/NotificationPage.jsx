@@ -80,12 +80,12 @@ function NotificationPage() {
     return (
         <div className="min-h-screen bg-gray-50 pb-20 sm:pb-24">
             {/* Header */}
-            <div className={`sticky top-0 z-10 bg-white flex items-center justify-between px-4 py-3 border-b border-gray-200 shadow-sm transition-colors duration-300 ${isSelectionMode ? 'bg-[#E21E26]/5' : ''}`}>
+            <div className={`sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-gray-200 shadow-sm transition-colors duration-300 ${isSelectionMode ? '' : ''}`} style={{ backgroundColor: isSelectionMode ? '#E21E26' : '#E21E26' }}>
                 <div className="flex items-center gap-3">
                     {isSelectionMode ? (
                         <button
                             onClick={toggleSelectionMode}
-                            className="text-gray-600 hover:text-gray-900 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            className="text-white hover:opacity-80 p-1 rounded-full hover:bg-white/20 transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -94,14 +94,23 @@ function NotificationPage() {
                     ) : (
                         <button
                             onClick={() => navigate(-1)}
-                            className="text-[#E21E26] text-2xl font-bold hover:opacity-80 transition-opacity"
+                            className="text-white hover:opacity-80 transition-opacity p-1 flex items-center justify-center"
                             aria-label="Back"
                         >
-                            ‹
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2.5}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
                         </button>
                     )}
 
-                    <h2 className="text-base font-bold text-gray-800">
+                    <h2 className="text-base font-bold text-white">
                         {isSelectionMode ? `${selectedIds.length} चयनित` : 'नोटिफिकेशन्स'}
                     </h2>
                 </div>
@@ -111,14 +120,14 @@ function NotificationPage() {
                         <>
                             <button
                                 onClick={handleSelectAll}
-                                className="text-sm font-semibold text-gray-600 hover:text-[#E21E26] transition-colors"
+                                className="text-sm font-semibold text-white hover:opacity-80 transition-colors"
                             >
                                 {selectedIds.length === notifications.length ? 'हटाएं' : 'सभी'}
                             </button>
                             {selectedIds.length > 0 && (
                                 <button
                                     onClick={handleDeleteClick}
-                                    className="text-[#E21E26] hover:bg-red-50 p-2 rounded-full transition-colors"
+                                    className="text-white hover:opacity-80 p-2 rounded-full transition-colors"
                                     aria-label="Delete Selected"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -131,7 +140,7 @@ function NotificationPage() {
                         notifications.length > 0 && (
                             <button
                                 onClick={toggleSelectionMode}
-                                className="text-sm font-semibold text-[#E21E26] hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                                className="text-sm font-semibold text-white hover:opacity-80 px-3 py-1.5 rounded-lg transition-colors border border-white/30 hover:border-white/50"
                             >
                                 चुनें
                             </button>

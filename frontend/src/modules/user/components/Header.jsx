@@ -35,8 +35,8 @@ function Header() {
             onClick={handleFranchiseClick}
             className="relative group flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 md:px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-lg flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-              boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)'
+              backgroundColor: '#F4C20D',
+              boxShadow: '0 2px 8px rgba(244, 194, 13, 0.3)'
             }}
             aria-label="Franchise Information"
           >
