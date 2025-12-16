@@ -36,6 +36,7 @@ import FeedbackPage from './modules/user/pages/FeedbackPage';
 import AboutPage from './modules/user/pages/AboutPage';
 import ContactPage from './modules/user/pages/ContactPage';
 import FranchisePage from './modules/user/pages/FranchisePage';
+import TermsAndConditionsPage from './modules/user/pages/TermsAndConditionsPage';
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/franchise" element={<FranchisePage />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminPage />} />
