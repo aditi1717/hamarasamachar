@@ -35,7 +35,6 @@ function ProfilePage() {
             if (user.phone) {
               const formattedPhone = user.phone.startsWith('+') ? user.phone : `+91${user.phone}`;
               setMobileNumber(formattedPhone);
-              localStorage.setItem('userMobileNumber', formattedPhone);
             }
 
             // Set user ID from backend
@@ -44,13 +43,11 @@ function ProfilePage() {
               const userIdStr = user.id.toString();
               const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
               setUserId(shortId);
-              localStorage.setItem('userId', shortId);
             } else if (user._id) {
               // Fallback to _id if id is not present
               const userIdStr = user._id.toString();
               const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
               setUserId(shortId);
-              localStorage.setItem('userId', shortId);
             }
 
             // Set profile data from backend
@@ -59,11 +56,6 @@ function ProfilePage() {
               gender: user.gender ? user.gender.toLowerCase() : null,
             };
             setProfileData(backendProfileData);
-            
-            // Also save to localStorage for fallback
-            if (backendProfileData.birthday || backendProfileData.gender) {
-              localStorage.setItem('userProfile', JSON.stringify(backendProfileData));
-            }
 
             // Set selected categories from backend - check selectedCategories array first
             if (user.selectedCategories && Array.isArray(user.selectedCategories) && user.selectedCategories.length > 0) {
@@ -83,29 +75,28 @@ function ProfilePage() {
         console.error('Error loading user data from backend:', error);
       }
 
-      // Fallback to localStorage
-      const savedProfile = localStorage.getItem('userProfile');
-      if (savedProfile) {
-        setProfileData(JSON.parse(savedProfile));
-      }
-
-      // Load mobile number if available
-      const savedMobile = localStorage.getItem('userMobileNumber');
-      if (savedMobile) {
-        setMobileNumber(savedMobile);
-      } else {
-        // Try to get from userData
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-          try {
-            const user = JSON.parse(userData);
-            if (user.phone) {
-              const formattedPhone = user.phone.startsWith('+') ? user.phone : `+91${user.phone}`;
-              setMobileNumber(formattedPhone);
-            }
-          } catch (e) {
-            console.error('Error parsing userData:', e);
+      // Fallback to localStorage - get from userData
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          
+          // Load profile data from userData
+          if (user.birthdate || user.gender) {
+            const profileData = {
+              birthday: user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : null,
+              gender: user.gender ? user.gender.toLowerCase() : null,
+            };
+            setProfileData(profileData);
           }
+          
+          // Load mobile number from userData
+          if (user.phone) {
+            const formattedPhone = user.phone.startsWith('+') ? user.phone : `+91${user.phone}`;
+            setMobileNumber(formattedPhone);
+          }
+        } catch (e) {
+          console.error('Error parsing userData:', e);
         }
       }
 
@@ -127,12 +118,6 @@ function ProfilePage() {
       return userId;
     }
     
-    // Try to get from localStorage
-    let savedUserId = localStorage.getItem('userId');
-    if (savedUserId) {
-      return savedUserId;
-    }
-    
     // Try to get from userData
     const userData = localStorage.getItem('userData');
     if (userData) {
@@ -142,7 +127,11 @@ function ProfilePage() {
           // MongoDB ObjectId is 24 chars, take first 8 for display
           const userIdStr = user.id.toString();
           const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
-          localStorage.setItem('userId', shortId);
+          setUserId(shortId);
+          return shortId;
+        } else if (user._id) {
+          const userIdStr = user._id.toString();
+          const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
           setUserId(shortId);
           return shortId;
         }
@@ -153,7 +142,6 @@ function ProfilePage() {
     
     // Generate new ID as last resort (only if no backend data available)
     const newUserId = 'PI' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    localStorage.setItem('userId', newUserId);
     setUserId(newUserId);
     return newUserId;
   };
@@ -300,12 +288,9 @@ function ProfilePage() {
 
   const handleLogoutConfirm = () => {
     // Clear all user data
-    localStorage.removeItem('userProfile');
-    localStorage.removeItem('userMobileNumber');
     localStorage.removeItem('userCategories');
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
-    localStorage.removeItem('userId');
     setShowLogoutConfirm(false);
     navigate('/login');
   };
@@ -319,9 +304,6 @@ function ProfilePage() {
         await deleteAccount();
       } else {
         // If no token, just clear local data
-        localStorage.removeItem('userProfile');
-        localStorage.removeItem('userMobileNumber');
-        localStorage.removeItem('userId');
         localStorage.removeItem('userCategories');
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');

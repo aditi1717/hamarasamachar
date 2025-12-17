@@ -12,15 +12,40 @@ export const getAllNews = async (req, res) => {
     // Build query
     const query = { status: 'published' };
 
-    if (category) {
+    // Logic: Breaking news items appear in BOTH breaking news section AND their category section
+    // When isBreakingNews=true: Show all breaking news (from any category)
+    // When category is provided: Show news from that category (including breaking news items from that category)
+    
+    // More robust check for isBreakingNews parameter (handles string 'true', boolean true, or '1')
+    const isBreakingNewsFilter = isBreakingNews === 'true' || isBreakingNews === true || isBreakingNews === '1';
+    
+    if (isBreakingNewsFilter) {
+      // Breaking news section: Show all breaking news from any category
+      query.isBreakingNews = true;
+      // Explicitly don't filter by category when showing breaking news
+      // (even if category parameter is accidentally passed)
+    } else if (category) {
+      // Category section: Show news from this specific category
+      // Breaking news items from this category will also appear here (no exclusion)
       const categoryDoc = await Category.findOne({ 
         $or: [
           { slug: category },
           { name: category }
-        ]
+        ],
+        status: 'active' // Only active categories
       });
       if (categoryDoc) {
         query.category = categoryDoc._id;
+        // Note: Breaking news items are NOT excluded here - they appear in both sections
+      } else {
+        // If category not found, return empty result (don't show all news)
+        return res.json({
+          success: true,
+          data: [],
+          total: 0,
+          page: parseInt(page),
+          limit: parseInt(limit)
+        });
       }
     }
 
@@ -28,9 +53,9 @@ export const getAllNews = async (req, res) => {
       query.district = district;
     }
 
-    if (isBreakingNews === 'true') {
-      query.isBreakingNews = true;
-    }
+    // Debug logging (can be removed in production if not needed)
+    console.log('News Query Params:', { category, district, page, limit, isBreakingNews, isBreakingNewsFilter });
+    console.log('MongoDB Query:', JSON.stringify(query, null, 2));
 
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -44,6 +69,8 @@ export const getAllNews = async (req, res) => {
 
     const total = await News.countDocuments(query);
 
+    console.log(`Found ${total} news items matching query`);
+
     res.json({
       success: true,
       data: news,
@@ -52,6 +79,7 @@ export const getAllNews = async (req, res) => {
       limit: parseInt(limit)
     });
   } catch (error) {
+    console.error('Get all news error:', error);
     res.status(500).json({
       success: false,
       message: error.message

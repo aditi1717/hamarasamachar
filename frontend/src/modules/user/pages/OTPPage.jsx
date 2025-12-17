@@ -111,15 +111,11 @@ function OTPPage() {
       const response = await verifyOTP(mobileNumber, otpString, 'registration');
       
       if (response.success) {
-        // Save mobile number to localStorage
-        if (mobileNumber) {
-          localStorage.setItem('userMobileNumber', mobileNumber);
-        }
         // Save token if received
         if (response.token) {
           localStorage.setItem('userToken', response.token);
         }
-        // Save user data
+        // Save user data (contains phone/mobile number)
         if (response.user) {
           localStorage.setItem('userData', JSON.stringify(response.user));
         }

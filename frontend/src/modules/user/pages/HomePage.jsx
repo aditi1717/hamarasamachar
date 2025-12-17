@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import Header from '../components/Header';
 import BreakingNewsBanner from '../components/BreakingNewsBanner';
 import CategoryMenu from '../components/CategoryMenu';
@@ -14,14 +14,17 @@ import { getNewsByCategory as fetchNewsByCategory } from '../services/newsServic
 
 function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { categorySlug, districtSlug } = useParams();
   const [categorySlugMap, setCategorySlugMap] = useState(CATEGORY_SLUGS); // Map of category name to slug
   const [apiCategories, setApiCategories] = useState([]); // Store API categories
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false); // Track if categories are loaded
 
-  // Load categories from API to build slug map
+  // Load categories from API to build slug map - MUST load first
   useEffect(() => {
     const loadCategorySlugs = async () => {
       try {
+        setCategoriesLoaded(false);
         const categories = await getAllCategories();
         if (categories && categories.length > 0) {
           setApiCategories(categories);
@@ -35,9 +38,11 @@ function HomePage() {
           // Merge with constants for fallback
           setCategorySlugMap({ ...CATEGORY_SLUGS, ...slugMap });
         }
+        setCategoriesLoaded(true);
       } catch (error) {
         console.error('Error loading category slugs:', error);
-        // Keep using constants
+        // Keep using constants but mark as loaded
+        setCategoriesLoaded(true);
       }
     };
     loadCategorySlugs();
@@ -72,23 +77,43 @@ function HomePage() {
     return district || 'सभी जिले';
   };
 
-  const [selectedCategory, setSelectedCategory] = useState(
-    getCategoryFromSlug(categorySlug)
-  );
-  const [selectedDistrict, setSelectedDistrict] = useState(
-    getDistrictFromSlug(districtSlug)
-  );
+  const [selectedCategory, setSelectedCategory] = useState('ब्रेकिंग'); // Default category
+  const [selectedDistrict, setSelectedDistrict] = useState('सभी जिले');
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Update category from URL when it changes
+  // Initialize category from URL
+  // Breaking news can be set immediately, others need categories loaded
   useEffect(() => {
-    const category = getCategoryFromSlug(categorySlug);
-    if (category !== selectedCategory) {
-      setSelectedCategory(category);
+    // For breaking news, set immediately (doesn't need categories)
+    // Handle both 'breaking' and 'breaking-news' slugs
+    if (categorySlug === 'breaking' || categorySlug === 'breaking-news' || !categorySlug) {
+      // Check if API has "ब्रेकिंग न्यूज़" category, otherwise use "ब्रेकिंग"
+      const breakingCategory = apiCategories.find(cat => 
+        cat.slug === 'breaking' || cat.slug === 'breaking-news' || cat.name === 'ब्रेकिंग' || cat.name === 'ब्रेकिंग न्यूज़'
+      );
+      const breakingCategoryName = breakingCategory ? breakingCategory.name : 'ब्रेकिंग';
+      
+      if (selectedCategory !== 'ब्रेकिंग' && selectedCategory !== 'ब्रेकिंग न्यूज़') {
+        setSelectedCategory(breakingCategoryName);
+      }
+    } else if (categoriesLoaded) {
+      // For other categories, wait for categories to load
+      const category = getCategoryFromSlug(categorySlug);
+      if (category && category !== selectedCategory) {
+        setSelectedCategory(category);
+      }
+    } else {
+      // While categories are loading, try to use fallback from constants
+      const fallbackCategory = Object.keys(CATEGORY_SLUGS).find(
+        key => CATEGORY_SLUGS[key] === categorySlug
+      );
+      if (fallbackCategory && fallbackCategory !== selectedCategory) {
+        setSelectedCategory(fallbackCategory);
+      }
     }
-  }, [categorySlug, selectedCategory]);
+  }, [categoriesLoaded, categorySlug]);
 
   // Update district from URL when it changes
   useEffect(() => {
@@ -100,26 +125,36 @@ function HomePage() {
     }
   }, [districtSlug, selectedCategory, selectedDistrict]);
 
-  // Update URL on initial load if no category in URL
+  // Update URL on initial load if no category in URL (after categories loaded)
   useEffect(() => {
-    if (!categorySlug && selectedCategory === 'ब्रेकिंग') {
+    if (categoriesLoaded && !categorySlug && selectedCategory === 'ब्रेकिंग') {
       navigate('/category/breaking', { replace: true });
     }
-  }, []);
+  }, [categoriesLoaded, categorySlug, selectedCategory]);
 
   // Update news data when category or district changes - using API
+  // IMPORTANT: Breaking news can load immediately, others need categories loaded
   useEffect(() => {
     const loadNews = async () => {
-      // Don't load if no category selected or categories haven't been loaded yet (unless using fallback)
+      // Don't load if no category selected
       if (!selectedCategory) {
+        setLoading(false);
         return;
       }
 
-      // For "ब्रेकिंग", we can load immediately (uses isBreakingNews flag, no category slug needed)
-      // For other categories, wait for categories to load or use fallback slug map
-      if (selectedCategory !== 'ब्रेकिंग' && apiCategories.length === 0 && !categorySlugMap[selectedCategory]) {
-        // Still loading categories, wait a bit
-        return;
+      // For breaking news, we can load immediately (doesn't need category slug or categories)
+      // Handle both "ब्रेकिंग" and "ब्रेकिंग न्यूज़"
+      if (selectedCategory === 'ब्रेकिंग' || selectedCategory === 'ब्रेकिंग न्यूज़') {
+        // Breaking news can always load - proceed to fetch
+      } else {
+        // For other categories, check if we can load
+        const hasFallbackSlug = categorySlugMap[selectedCategory] || CATEGORY_SLUGS[selectedCategory];
+        
+        // Other categories can load if: categories loaded OR we have fallback slug
+        if (!categoriesLoaded && !hasFallbackSlug) {
+          // Still loading categories and no fallback, wait
+          return;
+        }
       }
 
       try {
@@ -127,15 +162,27 @@ function HomePage() {
         setError(null);
         
         // Get category slug from API categories or fallback to constants
-        // For "ब्रेकिंग", slug is not needed (uses isBreakingNews flag)
-        const categorySlug = selectedCategory === 'ब्रेकिंग' 
-          ? null 
-          : (apiCategories.find(cat => cat.name === selectedCategory)?.slug 
-            || categorySlugMap[selectedCategory] 
-            || selectedCategory.toLowerCase().replace(/\s+/g, '-'));
+        // For "ब्रेकिंग" or "ब्रेकिंग न्यूज़", slug is not needed (uses isBreakingNews flag)
+        let categorySlug = null;
+        if (selectedCategory !== 'ब्रेकिंग' && selectedCategory !== 'ब्रेकिंग न्यूज़') {
+          // Try to find slug from API categories first
+          const apiCategory = apiCategories.find(cat => cat.name === selectedCategory);
+          if (apiCategory && apiCategory.slug) {
+            categorySlug = apiCategory.slug;
+          } else if (categorySlugMap[selectedCategory]) {
+            // Fallback to constants (from API categories slug map)
+            categorySlug = categorySlugMap[selectedCategory];
+          } else if (CATEGORY_SLUGS[selectedCategory]) {
+            // Fallback to constants (from constants file)
+            categorySlug = CATEGORY_SLUGS[selectedCategory];
+          } else {
+            // Last resort: generate slug from name
+            categorySlug = selectedCategory.toLowerCase().replace(/\s+/g, '-');
+          }
+        }
         
         // Fetch news using same logic as mock data
-        // Special case: "ब्रेकिंग" uses isBreakingNews flag (not a category)
+        // Special case: "ब्रेकिंग" or "ब्रेकिंग न्यूज़" uses isBreakingNews flag (not a category)
         // Special case: राजस्थान can filter by district
         const news = await fetchNewsByCategory(
           selectedCategory,  // category name (for logic)
@@ -144,7 +191,7 @@ function HomePage() {
           { page: 1, limit: 50 }
         );
         
-        setNewsData(news);
+        setNewsData(news || []);
       } catch (err) {
         console.error('Error loading news:', err);
         setError(err.message);
@@ -155,10 +202,18 @@ function HomePage() {
     };
 
     loadNews();
-  }, [selectedCategory, selectedDistrict, apiCategories, categorySlugMap]);
+  }, [selectedCategory, selectedDistrict, categoriesLoaded, apiCategories, categorySlugMap]);
 
   const handleCategoryChange = (category, slug) => {
     setSelectedCategory(category);
+    
+    // Handle breaking news - always use 'breaking' slug
+    if (category === 'ब्रेकिंग' || category === 'ब्रेकिंग न्यूज़') {
+      navigate('/category/breaking', { replace: true });
+      setSelectedDistrict('सभी जिले');
+      return;
+    }
+    
     // Use provided slug from API, or fallback to constants
     const categorySlug = slug || CATEGORY_SLUGS[category] || category.toLowerCase().replace(/\s+/g, '-');
     

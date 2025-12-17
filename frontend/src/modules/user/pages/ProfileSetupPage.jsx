@@ -56,12 +56,28 @@ function ProfileSetupPage() {
           console.error('Error loading profile from backend:', error);
         }
 
-        // Fallback to localStorage
-        const savedProfile = localStorage.getItem('userProfile');
-        if (savedProfile) {
-          const profileData = JSON.parse(savedProfile);
-          setBirthday(profileData.birthday || '');
-          setSelectedGender(profileData.gender || '');
+        // Fallback to localStorage - get from userData
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            if (user.birthdate) {
+              const date = new Date(user.birthdate);
+              if (!isNaN(date.getTime())) {
+                setBirthday(date.toISOString().split('T')[0]);
+              }
+            }
+            if (user.gender) {
+              const genderMap = {
+                'Male': 'male',
+                'Female': 'female',
+                'Other': 'other'
+              };
+              setSelectedGender(genderMap[user.gender] || user.gender.toLowerCase());
+            }
+          } catch (e) {
+            console.error('Error parsing userData:', e);
+          }
         }
       };
 
@@ -113,13 +129,7 @@ function ProfileSetupPage() {
         }
       }
 
-      // Save to localStorage as fallback/backup
-      const localProfileData = {
-        birthday: birthday,
-        gender: selectedGender,
-        savedAt: new Date().toISOString()
-      };
-      localStorage.setItem('userProfile', JSON.stringify(localProfileData));
+      // Profile data is already saved in userData via updateProfile API call
 
       // Navigate to category selection (pass edit mode if we're editing)
       if (isEditMode) {
@@ -131,13 +141,7 @@ function ProfileSetupPage() {
       console.error('Save profile error:', error);
       setError(error.message || 'प्रोफाइल सेव करने में समस्या हुई');
       
-      // Still save to localStorage and navigate even if backend fails
-      const localProfileData = {
-        birthday: birthday,
-        gender: selectedGender,
-        savedAt: new Date().toISOString()
-      };
-      localStorage.setItem('userProfile', JSON.stringify(localProfileData));
+      // Profile data will be saved in userData when backend succeeds
       if (isEditMode) {
         navigate('/category-selection', { state: { editMode: true } });
       } else {

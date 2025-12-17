@@ -16,6 +16,7 @@ import adminFeedbackRoutes from './routes/admin/feedbackRoutes.js';
 import adminRatingRoutes from './routes/admin/ratingRoutes.js';
 import adminEpaperRoutes from './routes/admin/epaperRoutes.js';
 import adminDashboardRoutes from './routes/admin/dashboardRoutes.js';
+import adminPlanRoutes from './routes/admin/planRoutes.js';
 
 import userAuthRoutes from './routes/user/authRoutes.js';
 import userNewsRoutes from './routes/user/newsRoutes.js';
@@ -25,6 +26,8 @@ import userRatingRoutes from './routes/user/ratingRoutes.js';
 import userEpaperRoutes from './routes/user/epaperRoutes.js';
 import userBookmarkRoutes from './routes/user/bookmarkRoutes.js';
 import userCategoryRoutes from './routes/user/categoryRoutes.js';
+import userPaymentRoutes from './routes/user/paymentRoutes.js';
+import userPlanRoutes from './routes/user/planRoutes.js';
 
 // Import middleware
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -83,6 +86,7 @@ app.use('/api/admin/feedback', adminFeedbackRoutes);
 app.use('/api/admin/ratings', adminRatingRoutes);
 app.use('/api/admin/epaper', adminEpaperRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/admin/plans', adminPlanRoutes);
 
 // User Routes
 app.use('/api/user/auth', userAuthRoutes);
@@ -93,6 +97,8 @@ app.use('/api/user/ratings', userRatingRoutes);
 app.use('/api/user/epaper', userEpaperRoutes);
 app.use('/api/user/bookmarks', userBookmarkRoutes);
 app.use('/api/user/categories', userCategoryRoutes);
+app.use('/api/user/payment', userPaymentRoutes);
+app.use('/api/user/plans', userPlanRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

@@ -5,14 +5,14 @@ import {
   deleteEpaper
 } from '../../controllers/admin/epaperController.js';
 import { adminAuth } from '../../middlewares/auth.js';
-import { uploadPDF } from '../../middlewares/upload.js';
+import { uploadEpaperFiles } from '../../middlewares/epaperUpload.js';
 
 const router = express.Router();
 
 router.use(adminAuth);
 
 router.get('/', getAllEpapers);
-router.post('/', uploadPDF.single('file'), uploadEpaper);
+router.post('/', uploadEpaperFiles, uploadEpaper);
 router.delete('/:id', deleteEpaper);
 
 export default router;
