@@ -19,6 +19,7 @@ import UserListPage from './modules/admin/pages/UserListPage';
 import UserDetailsPage from './modules/admin/pages/UserDetailsPage';
 import UserEditPage from './modules/admin/pages/UserEditPage';
 import EpaperPage from './modules/admin/pages/EpaperPage';
+import SubscriptionPlansPage from './modules/admin/pages/SubscriptionPlansPage';
 import SplashPage from './modules/user/pages/SplashPage';
 import LoginPage from './modules/user/pages/LoginPage';
 import OTPPage from './modules/user/pages/OTPPage';
@@ -88,6 +89,7 @@ function App() {
           <Route path="/admin/users/edit/:id" element={<UserEditPage />} />
           <Route path="/admin/users/:id" element={<UserDetailsPage />} />
           <Route path="/admin/epaper" element={<EpaperPage />} />
+          <Route path="/admin/plans" element={<SubscriptionPlansPage />} />
         </Routes>
       </AuthProvider>
     </Router>

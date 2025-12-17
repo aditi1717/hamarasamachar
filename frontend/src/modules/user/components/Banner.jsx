@@ -36,9 +36,9 @@ function Banner({ position = 'news_feed', category = null }) {
 
   // Use placeholder banner if no banners found
   const getPlaceholderBanner = () => {
-    // Random placeholder banner from picsum.photos (similar to Google placeholder)
+    // Random placeholder banner from picsum.photos (16:9 to match news cards)
     const randomId = Math.floor(Math.random() * 1000);
-    return `https://picsum.photos/800/200?random=${randomId}`;
+    return `https://picsum.photos/1280/720?random=${randomId}`;
   };
 
   if (loading) {
@@ -57,11 +57,11 @@ function Banner({ position = 'news_feed', category = null }) {
     return (
       <div className="w-full my-4 sm:my-5">
         <div className="w-full max-w-full border border-gray-200 rounded-lg overflow-hidden bg-white">
-          <div className="w-full">
+          <div className="relative w-full aspect-video bg-black/5">
             <img
               src={getPlaceholderBanner()}
               alt="Advertisement"
-              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
           </div>
           <div className="px-3 sm:px-4 py-2 sm:py-2.5 flex justify-center">
@@ -84,21 +84,21 @@ function Banner({ position = 'news_feed', category = null }) {
     <div className="w-full my-4 sm:my-5">
       <div className="w-full max-w-full border border-gray-200 rounded-lg overflow-hidden bg-white">
         <div 
-          className="w-full cursor-pointer"
+          className="relative w-full aspect-video cursor-pointer bg-black/5"
           onClick={() => handleBannerClick(banner)}
         >
           {banner.videoUrl ? (
             <video
               src={banner.videoUrl}
               controls
-              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-contain bg-black"
+              className="absolute inset-0 w-full h-full object-contain bg-black"
               playsInline
             />
           ) : banner.imageUrl ? (
             <img
               src={banner.imageUrl}
               alt={banner.title || 'Advertisement'}
-              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
               onError={(e) => {
                 // If image fails, try placeholder
                 e.target.src = getPlaceholderBanner();
@@ -108,7 +108,7 @@ function Banner({ position = 'news_feed', category = null }) {
             <img
               src={getPlaceholderBanner()}
               alt="Advertisement"
-              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
           )}
         </div>

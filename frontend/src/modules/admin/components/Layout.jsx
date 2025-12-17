@@ -208,6 +208,30 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>बैनर</span>
           </Link>
           <Link
+            to="/admin/plans"
+            onClick={handleNavClick}
+            className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/plans') ? `${COLORS.header.bg}15` : 'transparent',
+              color: location.pathname.startsWith('/admin/plans') ? COLORS.header.bg : '#4B5563'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/plans')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/plans')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h10a2 2 0 012 2v8a2 2 0 01-2 2H9m0-12H7a2 2 0 00-2 2v10a2 2 0 002 2h2m0-12v12" />
+            </svg>
+            <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>सब्सक्रिप्शन</span>
+          </Link>
+          <Link
             to="/admin/feedback"
             onClick={handleNavClick}
             className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"
