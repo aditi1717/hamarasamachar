@@ -114,16 +114,66 @@ function NewsCard({ news }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
-    setIsBookmarked(isNewsBookmarked(news.id));
-  }, [news.id]);
+    const checkBookmarkStatus = async () => {
+      const newsId = news.id || news._id;
+      if (!newsId) return;
 
-  const handleSave = () => {
-    const bookmarked = toggleBookmark(news.id);
-    setIsBookmarked(bookmarked);
-    if (bookmarked) {
-      alert('समाचार सेव हो गया!');
-    } else {
-      alert('समाचार सेव हटा दिया गया!');
+      const token = localStorage.getItem('userToken');
+      
+      // If authenticated, check via API
+      if (token) {
+        try {
+          const { checkBookmark } = await import('../services/bookmarkService');
+          const bookmarked = await checkBookmark(newsId);
+          setIsBookmarked(bookmarked);
+          
+          // Also sync with localStorage
+          if (bookmarked) {
+            const { addToBookmarks } = await import('../utils/bookmarkUtils');
+            addToBookmarks(newsId);
+          }
+        } catch (error) {
+          console.error('Error checking bookmark:', error);
+          // Fallback to localStorage
+          setIsBookmarked(isNewsBookmarked(newsId));
+        }
+      } else {
+        // Use localStorage if not authenticated
+        setIsBookmarked(isNewsBookmarked(newsId));
+      }
+    };
+
+    checkBookmarkStatus();
+
+    // Listen for bookmark changes
+    const handleBookmarkChange = (event) => {
+      const newsId = news.id || news._id;
+      if (event.detail?.newsId === newsId) {
+        setIsBookmarked(event.detail.isBookmarked);
+      }
+    };
+
+    window.addEventListener('bookmarksChanged', handleBookmarkChange);
+    return () => {
+      window.removeEventListener('bookmarksChanged', handleBookmarkChange);
+    };
+  }, [news.id, news._id]);
+
+  const handleSave = async () => {
+    const newsId = news.id || news._id;
+    if (!newsId) return;
+
+    try {
+      const bookmarked = await toggleBookmark(newsId);
+      setIsBookmarked(bookmarked);
+      if (bookmarked) {
+        alert('समाचार सेव हो गया!');
+      } else {
+        alert('समाचार सेव हटा दिया गया!');
+      }
+    } catch (error) {
+      console.error('Error saving bookmark:', error);
+      alert('त्रुटि हुई, कृपया पुनः प्रयास करें');
     }
     setShowMenu(false);
   };
@@ -147,14 +197,20 @@ function NewsCard({ news }) {
 
 
   const handleCardClick = () => {
-    navigate(`/news/${news.id}`);
+    const newsId = news.id || news._id;
+    if (newsId) {
+      navigate(`/news/${newsId}`);
+    }
   };
 
   const handleVideoClick = (e) => {
     e.stopPropagation(); // Prevent card click navigation
     if (isVideo && news.videoUrl) {
       // Navigate to shorts page with video ID
-      navigate(`/shorts?video=${news.id}`);
+      const newsId = news.id || news._id;
+      if (newsId) {
+        navigate(`/shorts?video=${newsId}`);
+      }
     }
   };
 

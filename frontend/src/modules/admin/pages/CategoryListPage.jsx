@@ -6,14 +6,20 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import Table from '../components/Table';
 import Form from '../components/Form';
+import { useToast } from '../hooks/useToast';
+import { useConfirm } from '../hooks/useConfirm';
+import Toast from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function CategoryListPage() {
   const navigate = useNavigate();
+  const { toast, showToast, hideToast } = useToast();
+  const { confirmDialog, showConfirm } = useConfirm();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({ type: '', text: '' });
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     loadCategories();
@@ -25,32 +31,54 @@ function CategoryListPage() {
       const data = await categoryService.getAll();
       setCategories(data);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'श्रेणियाँ लोड करने में विफल' });
+      showToast(error.message || 'श्रेणियाँ लोड करने में विफल', 'error');
+      console.error('Error loading categories:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (category) => {
-    if (!window.confirm(`क्या आप "${category.name}" श्रेणी को हटाना चाहते हैं?`)) {
+    const confirmed = await showConfirm({
+      message: `क्या आप "${category.name}" श्रेणी को हटाना चाहते हैं? ${category.newsCount > 0 ? 'इस श्रेणी में ' + category.newsCount + ' समाचार हैं।' : ''}`,
+      type: category.newsCount > 0 ? 'warning' : 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
     try {
-      await categoryService.delete(category.id);
-      setMessage({ type: 'success', text: 'श्रेणी सफलतापूर्वक हटाई गई' });
+      await categoryService.delete(category._id || category.id);
+      showToast('श्रेणी सफलतापूर्वक हटाई गई', 'success');
       loadCategories();
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'श्रेणी हटाने में विफल' });
+      showToast(error.message || 'श्रेणी हटाने में विफल', 'error');
+      console.error('Error deleting category:', error);
     }
   };
 
-  const handleBulkAction = (action) => {
+  const handleBulkAction = async (action) => {
     if (selectedItems.length === 0) return;
-    if (confirm(`क्या आप वाकई ${selectedItems.length} श्रेणियों पर यह कार्रवाई करना चाहते हैं?`)) {
-      // Mock implementation for now
-      setMessage({ type: 'success', text: 'Bulk action completed successfully' });
+
+    const confirmed = await showConfirm({
+      message: `क्या आप वाकई ${selectedItems.length} श्रेणियों को हटाना चाहते हैं?`,
+      type: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      // Delete all selected categories
+      await Promise.all(selectedItems.map(id => categoryService.delete(id)));
+      showToast(`${selectedItems.length} श्रेणियाँ सफलतापूर्वक हटाई गईं`, 'success');
       setSelectedItems([]);
+      loadCategories();
+    } catch (error) {
+      showToast(error.message || 'श्रेणियाँ हटाने में विफल', 'error');
+      console.error('Error bulk deleting categories:', error);
     }
   };
 
@@ -74,13 +102,14 @@ function CategoryListPage() {
       render: (_, row) => (
         <input
           type="checkbox"
-          checked={selectedItems.includes(row.id)}
+          checked={selectedItems.includes(row._id || row.id)}
           onChange={(e) => {
             e.stopPropagation();
+            const categoryId = row._id || row.id;
             if (e.target.checked) {
-              setSelectedItems([...selectedItems, row.id]);
+              setSelectedItems([...selectedItems, categoryId]);
             } else {
-              setSelectedItems(selectedItems.filter(id => id !== row.id));
+              setSelectedItems(selectedItems.filter(id => id !== categoryId));
             }
           }}
           className="rounded border-gray-300 text-[#E21E26] focus:ring-[#E21E26]"
@@ -136,7 +165,7 @@ function CategoryListPage() {
     {
       label: 'संपादित करें',
       variant: 'secondary',
-      onClick: (row) => navigate(`/admin/categories/edit/${row.id}`),
+      onClick: (row) => navigate(`/admin/categories/edit/${row._id || row.id}`),
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -146,7 +175,7 @@ function CategoryListPage() {
     {
       label: 'हटाएं',
       variant: 'danger',
-      onClick: handleDelete,
+      onClick: (row) => handleDelete(row),
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -170,17 +199,27 @@ function CategoryListPage() {
     );
   }
 
+  // Filter categories based on search and status
+  const filteredCategories = categories.filter(cat => {
+    const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = !statusFilter || cat.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <ProtectedRoute>
+      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onClose={hideToast} />}
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={!!confirmDialog}
+          message={confirmDialog.message}
+          type={confirmDialog.type}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={confirmDialog.onCancel}
+        />
+      )}
       <Layout title="श्रेणियाँ" showPageHeader={true}>
         <div className="p-4 sm:p-6 space-y-6 animate-fade-in">
-
-          {/* Message */}
-          {message.text && (
-            <div className={`p-4 rounded-lg border ${message.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-              {message.text}
-            </div>
-          )}
 
           {/* Actions Bar */}
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -230,7 +269,11 @@ function CategoryListPage() {
               </svg>
             </div>
             <div className="col-span-1">
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26] outline-none">
+              <select 
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26] outline-none"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option value="">सभी स्थितियाँ</option>
                 <option value="active">सक्रिय</option>
                 <option value="inactive">निष्क्रिय</option>
@@ -241,7 +284,7 @@ function CategoryListPage() {
           {/* Table */}
           <Table
             columns={columns}
-            data={categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))}
+            data={filteredCategories}
             searchable={false} // We have external search now
             sortable={true}
             actions={actions}
@@ -249,16 +292,11 @@ function CategoryListPage() {
             emptyMessage="कोई श्रेणी नहीं मिली"
           />
 
-          {/* Pagination (Static Mock) */}
+          {/* Summary */}
           <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
             <div className="text-sm text-gray-500">
-              कुल <span className="font-semibold">{categories.length}</span> श्रेणियाँ
-            </div>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>पिछला</button>
-              <button className="px-3 py-1 border rounded bg-[#E21E26] text-white">1</button>
-              <button className="px-3 py-1 border rounded hover:bg-gray-50">2</button>
-              <button className="px-3 py-1 border rounded hover:bg-gray-50">अगला</button>
+              कुल <span className="font-semibold">{filteredCategories.length}</span> श्रेणियाँ
+              {statusFilter && ` (${statusFilter === 'active' ? 'सक्रिय' : 'निष्क्रिय'})`}
             </div>
           </div>
 

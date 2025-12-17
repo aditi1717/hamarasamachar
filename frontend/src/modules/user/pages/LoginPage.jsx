@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { sendOTP } from '../services/authService';
 
 function LoginPage() {
   const navigate = useNavigate();
   const [mobileNumber, setMobileNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Prevent body scroll on mount
@@ -37,11 +40,33 @@ function LoginPage() {
     };
   }, []);
 
-  const handleContinue = () => {
-    if (mobileNumber.length === 10) {
-      navigate('/otp', { state: { mobileNumber: countryCode + mobileNumber } });
-    } else {
+  const handleContinue = async () => {
+    if (mobileNumber.length !== 10) {
       alert('कृपया 10 अंकों का मोबाइल नंबर दर्ज करें');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const fullPhoneNumber = countryCode + mobileNumber;
+      const response = await sendOTP(fullPhoneNumber, 'registration');
+      
+      if (response.success) {
+        // Save mobile number to localStorage
+        localStorage.setItem('userMobileNumber', fullPhoneNumber);
+        // Navigate to OTP page
+        navigate('/otp', { state: { mobileNumber: fullPhoneNumber } });
+      } else {
+        setError(response.message || 'OTP भेजने में समस्या हुई');
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      setError(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+      alert(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,16 +159,23 @@ function LoginPage() {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-xs text-center">{error}</p>
+            </div>
+          )}
+
           {/* Continue Button */}
           <button
             onClick={handleContinue}
-            disabled={mobileNumber.length !== 10}
-            className={`w-full py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-md transform transition-all duration-200 active:scale-95 mb-3 ${mobileNumber.length === 10
+            disabled={mobileNumber.length !== 10 || loading}
+            className={`w-full py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-md transform transition-all duration-200 active:scale-95 mb-3 ${mobileNumber.length === 10 && !loading
               ? 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] text-white hover:shadow-[#E21E26]/30 hover:-translate-y-0.5'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
               }`}
           >
-            आगे बढ़ें
+            {loading ? 'भेज रहे हैं...' : 'आगे बढ़ें'}
           </button>
 
           {/* Skip Button */}

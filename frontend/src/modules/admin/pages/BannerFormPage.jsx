@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { bannerService } from '../services/bannerService';
+import { categoryService } from '../services/categoryService';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import Form from '../components/Form';
-import { CATEGORIES } from '../../user/constants/categories';
 
 function BannerFormPage() {
   const navigate = useNavigate();
@@ -13,38 +13,63 @@ function BannerFormPage() {
 
   const [formData, setFormData] = useState({
     title: '',
-    images: [{ url: '', link: '', order: 1 }],
+    link: '',
     position: 'news_feed',
     category: '',
     status: 'active',
     target: '_blank'
   });
 
+  const [mediaFile, setMediaFile] = useState(null);
+  const [mediaPreview, setMediaPreview] = useState(null);
+  const [mediaType, setMediaType] = useState(null); // 'image' or 'video'
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
+    loadCategories();
     if (isEdit) {
       loadBanner();
     }
   }, [id]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryService.getAll();
+      // Filter only active categories
+      const activeCategories = data.filter(cat => cat.status === 'active');
+      setCategories(activeCategories);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      // Fallback to empty array if error
+      setCategories([]);
+    }
+  };
 
   const loadBanner = async () => {
     try {
       setLoading(true);
       const banner = await bannerService.getById(id);
       if (banner) {
-        // Convert old format (single imageUrl) to new format (images array)
-        const images = banner.images || (banner.imageUrl ? [{ url: banner.imageUrl, link: banner.link || '', order: 1 }] : [{ url: '', link: '', order: 1 }]);
         setFormData({
           title: banner.title || '',
-          images: images,
+          link: banner.link || '',
           position: banner.position || 'news_feed',
           category: banner.category || '',
           status: banner.status || 'active',
           target: banner.target || '_blank'
         });
+        
+        // Set preview for existing media
+        if (banner.videoUrl) {
+          setMediaPreview(banner.videoUrl);
+          setMediaType('video');
+        } else if (banner.imageUrl) {
+          setMediaPreview(banner.imageUrl);
+          setMediaType('image');
+        }
       }
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'बैनर लोड करने में विफल' });
@@ -62,62 +87,58 @@ function BannerFormPage() {
     }
   };
 
-  const handleImageChange = (index, field, value) => {
-    setFormData(prev => {
-      const newImages = [...prev.images];
-      newImages[index] = { ...newImages[index], [field]: value };
-      return { ...prev, images: newImages };
-    });
+  const handleMediaChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    if (errors[`images_${index}`]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[`images_${index}`];
-        return newErrors;
-      });
-    }
-  };
-
-  const addImage = () => {
-    if (formData.images.length >= 3) {
-      setMessage({ type: 'error', text: 'अधिकतम 3 छवियाँ जोड़ सकते हैं' });
+    // Check file size (100MB max)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      setMessage({ type: 'error', text: 'फ़ाइल का आकार 100MB से कम होना चाहिए' });
       return;
     }
-    setFormData(prev => {
-      const maxOrder = prev.images.length > 0 ? Math.max(...prev.images.map(img => img.order)) : 0;
-      return {
-        ...prev,
-        images: [...prev.images, { url: '', link: '', order: maxOrder + 1 }]
-      };
-    });
+
+    // Check if it's a video file
+    const isVideo = file.type && file.type.startsWith('video/');
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const isVideoByExt = videoExts.includes(fileExt);
+
+    if (isVideo || isVideoByExt) {
+      setMediaType('video');
+      // Create preview URL for video
+      const videoURL = URL.createObjectURL(file);
+      setMediaPreview(videoURL);
+    } else {
+      setMediaType('image');
+      // Create preview URL for image
+      const imageURL = URL.createObjectURL(file);
+      setMediaPreview(imageURL);
+    }
+
+    setMediaFile(file);
+    
+    // Clear errors
+    if (errors.media) {
+      setErrors(prev => ({ ...prev, media: '' }));
+    }
   };
 
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
+  const handleRemoveMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    // Clear file input
+    const fileInput = document.getElementById('banner-media');
+    if (fileInput) fileInput.value = '';
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (formData.images.length === 0) {
-      newErrors.images = 'कम से कम एक छवि आवश्यक है';
-    } else {
-      formData.images.forEach((image, index) => {
-        if (!image.url.trim()) {
-          newErrors[`images_${index}`] = 'छवि URL आवश्यक है';
-        }
-        if (!image.link.trim()) {
-          newErrors[`images_link_${index}`] = 'बैनर लिंक आवश्यक है';
-        } else if (!/^https?:\/\/.+/.test(image.link)) {
-          newErrors[`images_link_${index}`] = 'कृपया एक वैध URL दर्ज करें (http:// या https:// के साथ)';
-        }
-        if (image.order < 1) {
-          newErrors[`images_order_${index}`] = 'क्रम 1 या अधिक होना चाहिए';
-        }
-      });
+    // Check if media file is uploaded (for new banner) or exists (for edit)
+    if (!isEdit && !mediaFile) {
+      newErrors.media = 'कृपया एक छवि या वीडियो अपलोड करें';
     }
 
     setErrors(newErrors);
@@ -135,11 +156,27 @@ function BannerFormPage() {
 
     try {
       setLoading(true);
+      
+      // Create FormData for file upload
+      const submitData = new FormData();
+      submitData.append('title', formData.title || '');
+      submitData.append('link', formData.link || '');
+      submitData.append('position', formData.position);
+      submitData.append('category', formData.category || '');
+      submitData.append('order', formData.order || 0);
+      submitData.append('status', formData.status);
+      submitData.append('target', formData.target);
+      
+      // Append media file if uploaded
+      if (mediaFile) {
+        submitData.append('media', mediaFile);
+      }
+
       if (isEdit) {
-        await bannerService.update(id, formData);
+        await bannerService.update(id, submitData);
         setMessage({ type: 'success', text: 'बैनर सफलतापूर्वक अपडेट हो गया' });
       } else {
-        await bannerService.create(formData);
+        await bannerService.create(submitData);
         setMessage({ type: 'success', text: 'बैनर सफलतापूर्वक बनाया गया' });
       }
 
@@ -202,96 +239,85 @@ function BannerFormPage() {
                 disabled={loading}
               />
 
-              {/* Multiple Images */}
+              {/* Single Media Upload (Image or Video) */}
               <div className="mb-3 sm:mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700">
-                    बैनर छवियाँ * (अधिकतम 3)
-                  </label>
-                  {formData.images.length < 3 && (
-                    <button
-                      type="button"
-                      onClick={addImage}
-                      disabled={loading}
-                      className="px-2 py-1 text-xs sm:text-sm text-orange-600 hover:text-orange-700 border border-orange-600 rounded hover:bg-orange-50 transition-colors disabled:opacity-50"
-                    >
-                      + छवि जोड़ें
-                    </button>
-                  )}
-                </div>
-
-                {formData.images.map((image, index) => (
-                  <div key={index} className="mb-3 p-3 border border-gray-300 rounded-lg bg-gray-50">
-                    <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 mb-2">
-                      <div className="flex-1 w-full">
-                        <Form.Field
-                          label={`छवि ${index + 1} URL *`}
-                          name={`image_${index}_url`}
-                          value={image.url}
-                          onChange={(e) => handleImageChange(index, 'url', e.target.value)}
-                          placeholder="https://example.com/banner.jpg"
-                          required
-                          error={errors[`images_${index}`]}
-                          disabled={loading}
-                        />
-                      </div>
-                      <div className="w-full sm:w-24 flex-shrink-0">
-                        <Form.Field
-                          label="क्रम"
-                          name={`image_${index}_order`}
-                          type="number"
-                          value={image.order}
-                          onChange={(e) => handleImageChange(index, 'order', parseInt(e.target.value) || 1)}
-                          required
-                          error={errors[`images_order_${index}`]}
-                          disabled={loading}
-                          min="1"
-                        />
-                      </div>
-                      {formData.images.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          disabled={loading}
-                          className="mt-6 sm:mt-0 px-2 py-1.5 text-red-600 hover:text-red-700 border border-red-300 rounded hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center justify-center"
-                          title="हटाएं"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  बैनर छवि/वीडियो * {!isEdit && <span className="text-red-500">*</span>}
+                </label>
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 hover:border-[#E21E26] transition-colors">
+                  {!mediaPreview ? (
+                    <div className="text-center">
+                      <input
+                        id="banner-media"
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={handleMediaChange}
+                        disabled={loading}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="banner-media"
+                        className="cursor-pointer flex flex-col items-center justify-center"
+                      >
+                        <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span className="text-sm text-gray-600 mb-1">
+                          छवि या वीडियो अपलोड करें
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          PNG, JPG, GIF या MP4, WebM (अधिकतम 100MB)
+                        </span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      {mediaType === 'video' ? (
+                        <div className="relative">
+                          <video
+                            src={mediaPreview}
+                            controls
+                            className="w-full h-auto max-h-64 rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveMedia}
+                            disabled={loading}
+                            className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full hover:bg-red-700 transition-colors"
+                            title="हटाएं"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={mediaPreview}
+                            alt="Banner preview"
+                            className="w-full h-auto max-h-64 object-contain rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveMedia}
+                            disabled={loading}
+                            className="absolute top-2 right-2 bg-red-600 text-white p-1.5 rounded-full hover:bg-red-700 transition-colors"
+                            title="हटाएं"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    <Form.Field
-                      label={`बैनर लिंक/URL ${index + 1} *`}
-                      name={`image_${index}_link`}
-                      value={image.link}
-                      onChange={(e) => handleImageChange(index, 'link', e.target.value)}
-                      placeholder="https://example.com"
-                      required
-                      error={errors[`images_link_${index}`]}
-                      disabled={loading}
-                    />
-
-                    {/* Image Preview */}
-                    {image.url && (
-                      <div className="mt-2 border border-gray-300 rounded-lg p-2 bg-white">
-                        <img
-                          src={image.url}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-auto max-h-32 object-contain rounded"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {errors.images && (
-                  <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.images}</p>
+                  )}
+                </div>
+                
+                {errors.media && (
+                  <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.media}</p>
                 )}
               </div>
 
@@ -338,7 +364,7 @@ function BannerFormPage() {
                 disabled={loading}
                 options={[
                   { value: '', label: 'सभी श्रेणियाँ' },
-                  ...CATEGORIES.map(cat => ({ value: cat, label: cat }))
+                  ...categories.map(cat => ({ value: cat.name, label: cat.name }))
                 ]}
               />
 

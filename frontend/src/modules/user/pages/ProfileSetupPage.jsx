@@ -1,25 +1,71 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { updateProfile, getCurrentUser } from '../services/authService';
 
 function ProfileSetupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isEditMode = location.state?.editMode || false;
   const [birthday, setBirthday] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Load existing profile data if available
-  useEffect(() => {
-    // Prevent body scroll on mount
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
+    // Load existing profile data if available
+    useEffect(() => {
+      // Prevent body scroll on mount
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
 
-    const savedProfile = localStorage.getItem('userProfile');
-    if (savedProfile) {
-      const profileData = JSON.parse(savedProfile);
-      setBirthday(profileData.birthday || '');
-      setSelectedGender(profileData.gender || '');
-    }
+      // Try to load from backend first, then fallback to localStorage
+      const loadProfileData = async () => {
+        try {
+          const token = localStorage.getItem('userToken');
+          if (token) {
+            const user = await getCurrentUser();
+            if (user) {
+              // Check if profile is already complete (only redirect if NOT in edit mode)
+              if (!isEditMode && user.gender && user.gender !== '' && user.selectedCategory) {
+                // Profile already complete, redirect to home (only during first-time setup)
+                navigate('/category/breaking');
+                return;
+              }
+
+              // Load from backend (works for both first-time and edit mode)
+              if (user.birthdate) {
+                const date = new Date(user.birthdate);
+                if (!isNaN(date.getTime())) {
+                  setBirthday(date.toISOString().split('T')[0]);
+                }
+              }
+              if (user.gender) {
+                // Map backend gender (Male/Female/Other) to frontend (male/female/other)
+                const genderMap = {
+                  'Male': 'male',
+                  'Female': 'female',
+                  'Other': 'other'
+                };
+                setSelectedGender(genderMap[user.gender] || user.gender.toLowerCase());
+              }
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading profile from backend:', error);
+        }
+
+        // Fallback to localStorage
+        const savedProfile = localStorage.getItem('userProfile');
+        if (savedProfile) {
+          const profileData = JSON.parse(savedProfile);
+          setBirthday(profileData.birthday || '');
+          setSelectedGender(profileData.gender || '');
+        }
+      };
+
+      loadProfileData();
 
     // Cleanup: restore body scroll on unmount
     return () => {
@@ -30,19 +76,76 @@ function ProfileSetupPage() {
     };
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedGender) {
       alert('कृपया लिंग चुनें (अनिवार्य)');
       return;
     }
-    // Save profile data to localStorage
-    const profileData = {
-      birthday: birthday,
-      gender: selectedGender,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('userProfile', JSON.stringify(profileData));
-    navigate('/category-selection');
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Map frontend gender (male/female/other) to backend format (Male/Female/Other)
+      const genderMap = {
+        'male': 'Male',
+        'female': 'Female',
+        'other': 'Other'
+      };
+
+      const profileData = {
+        gender: genderMap[selectedGender] || selectedGender,
+      };
+
+      // Add birthdate if provided
+      if (birthday) {
+        profileData.birthdate = birthday;
+      }
+
+      // Try to update profile on backend
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        try {
+          await updateProfile(profileData);
+        } catch (apiError) {
+          console.error('Backend update failed:', apiError);
+          // Continue to save to localStorage as fallback
+        }
+      }
+
+      // Save to localStorage as fallback/backup
+      const localProfileData = {
+        birthday: birthday,
+        gender: selectedGender,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('userProfile', JSON.stringify(localProfileData));
+
+      // Navigate to category selection (pass edit mode if we're editing)
+      if (isEditMode) {
+        navigate('/category-selection', { state: { editMode: true } });
+      } else {
+        navigate('/category-selection');
+      }
+    } catch (error) {
+      console.error('Save profile error:', error);
+      setError(error.message || 'प्रोफाइल सेव करने में समस्या हुई');
+      
+      // Still save to localStorage and navigate even if backend fails
+      const localProfileData = {
+        birthday: birthday,
+        gender: selectedGender,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('userProfile', JSON.stringify(localProfileData));
+      if (isEditMode) {
+        navigate('/category-selection', { state: { editMode: true } });
+      } else {
+        navigate('/category-selection');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSkip = () => {
@@ -172,16 +275,23 @@ function ProfileSetupPage() {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-xs text-center">{error}</p>
+            </div>
+          )}
+
           {/* Save Button */}
           <button
             onClick={handleSave}
-            disabled={!selectedGender}
-            className={`w-full py-2.5 rounded-xl font-bold text-base tracking-wide shadow-lg transform transition-all duration-200 active:scale-95 ${selectedGender
+            disabled={!selectedGender || loading}
+            className={`w-full py-2.5 rounded-xl font-bold text-base tracking-wide shadow-lg transform transition-all duration-200 active:scale-95 ${selectedGender && !loading
               ? 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] text-white hover:shadow-[#E21E26]/30 hover:-translate-y-0.5'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
               }`}
           >
-            आगे बढ़ें
+            {loading ? 'सेव कर रहे हैं...' : 'आगे बढ़ें'}
           </button>
         </div>
       </div>

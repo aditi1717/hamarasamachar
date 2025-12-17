@@ -1,143 +1,179 @@
-// Category management service
-const CATEGORIES_KEY = 'admin_categories';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Initialize with dummy data if not exists
-function initializeCategories() {
-  const existing = localStorage.getItem(CATEGORIES_KEY);
-  if (!existing) {
-    const defaultCategories = [
-      {
-        id: 1,
-        name: 'ब्रेकिंग न्यूज़',
-        description: 'ताज़ा और महत्वपूर्ण समाचार',
-        icon: '🔥',
-        color: '#F4C20D',
-        order: 1,
-        status: 'active',
-        newsCount: 320,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 2,
-        name: 'राजनीति',
-        description: 'राजनीतिक समाचार और अपडेट्स',
-        icon: '🏛️',
-        color: '#E21E26',
-        order: 2,
-        status: 'active',
-        newsCount: 280,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 3,
-        name: 'खेलकूद',
-        description: 'खेल समाचार और अपडेट्स',
-        icon: '⚽',
-        color: '#10B981',
-        order: 3,
-        status: 'active',
-        newsCount: 250,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(defaultCategories));
-  }
-}
+// Helper function to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+};
 
-// Initialize on load
-initializeCategories();
+// Helper function to transform backend category to frontend format
+const transformCategory = (backendCategory) => {
+  return {
+    id: backendCategory._id,
+    _id: backendCategory._id,
+    name: backendCategory.name || '',
+    description: backendCategory.description || '',
+    icon: backendCategory.icon || '',
+    color: backendCategory.color || '#E21E26',
+    order: backendCategory.order || 0,
+    status: backendCategory.status || 'active',
+    newsCount: backendCategory.newsCount || 0,
+    slug: backendCategory.slug || '',
+    createdAt: backendCategory.createdAt,
+    updatedAt: backendCategory.updatedAt
+  };
+};
 
 export const categoryService = {
   // Get all categories
   getAll: async () => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
-    return categories.sort((a, b) => a.order - b.order);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch categories');
+      }
+
+      const data = await response.json();
+      return (data.data || []).map(transformCategory).sort((a, b) => a.order - b.order);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
   },
 
   // Get category by ID
   getById: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
-    return categories.find(cat => cat.id === parseInt(id));
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch category');
+      }
+
+      const data = await response.json();
+      return transformCategory(data.data);
+    } catch (error) {
+      console.error('Error fetching category:', error);
+      throw error;
+    }
   },
 
   // Create new category
   create: async (categoryData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categoryData)
+      });
 
-    const newCategory = {
-      id: Date.now(),
-      ...categoryData,
-      newsCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create category');
+      }
 
-    categories.push(newCategory);
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-    return newCategory;
+      const data = await response.json();
+      return transformCategory(data.data);
+    } catch (error) {
+      console.error('Error creating category:', error);
+      throw error;
+    }
   },
 
   // Update category
   update: async (id, categoryData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
-    const index = categories.findIndex(cat => cat.id === parseInt(id));
-    
-    if (index === -1) {
-      throw new Error('श्रेणी नहीं मिली');
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(categoryData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update category');
+      }
+
+      const data = await response.json();
+      return transformCategory(data.data);
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
     }
-
-    categories[index] = {
-      ...categories[index],
-      ...categoryData,
-      updatedAt: new Date().toISOString()
-    };
-
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-    return categories[index];
   },
 
   // Delete category
   delete: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
-    const category = categories.find(cat => cat.id === parseInt(id));
-    
-    if (!category) {
-      throw new Error('श्रेणी नहीं मिली');
-    }
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    // Check if category has news
-    if (category.newsCount > 0) {
-      throw new Error('इस श्रेणी में समाचार हैं। पहले समाचार हटाएं या दूसरी श्रेणी में स्थानांतरित करें।');
-    }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete category');
+      }
 
-    const filtered = categories.filter(cat => cat.id !== parseInt(id));
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(filtered));
-    return true;
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
   },
 
   // Reorder categories
   reorder: async (categoryIds) => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || '[]');
-    
-    categoryIds.forEach((id, index) => {
-      const category = categories.find(cat => cat.id === id);
-      if (category) {
-        category.order = index + 1;
-        category.updatedAt = new Date().toISOString();
-      }
-    });
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/categories/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ categoryIds })
+      });
 
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
-    return categories;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to reorder categories');
+      }
+
+      const data = await response.json();
+      return (data.data || []).map(transformCategory);
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+      throw error;
+    }
   }
 };
 
+export default categoryService;

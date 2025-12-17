@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { updateProfile } from '../services/authService';
 
 
 const RAJASTHAN_DISTRICTS = [
@@ -60,20 +61,57 @@ function CitySelectionPage() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        const savedCityName = localStorage.getItem('userCity');
-        if (savedCityName) {
-            const found = RAJASTHAN_DISTRICTS.find(d => d.name === savedCityName || d.hindi === savedCityName);
-            if (found) setSelectedCity(found);
-            else setSelectedCity({ name: savedCityName, hindi: savedCityName });
-        }
+        // Load from backend first, then fallback to localStorage
+        const loadCity = async () => {
+            try {
+                const token = localStorage.getItem('userToken');
+                if (token) {
+                    const { getCurrentUser } = await import('../services/authService');
+                    const user = await getCurrentUser();
+                    if (user && user.selectedCity) {
+                        const found = RAJASTHAN_DISTRICTS.find(d => d.name === user.selectedCity || d.hindi === user.selectedCity);
+                        if (found) {
+                            setSelectedCity(found);
+                            localStorage.setItem('userCity', found.name);
+                            return;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading city from backend:', error);
+            }
+
+            // Fallback to localStorage
+            const savedCityName = localStorage.getItem('userCity');
+            if (savedCityName) {
+                const found = RAJASTHAN_DISTRICTS.find(d => d.name === savedCityName || d.hindi === savedCityName);
+                if (found) setSelectedCity(found);
+                else setSelectedCity({ name: savedCityName, hindi: savedCityName });
+            }
+        };
+
+        loadCity();
     }, []);
 
-    const handleCitySelect = (cityObj) => {
+    const handleCitySelect = async (cityObj) => {
         setSelectedCity(cityObj);
-        // Save English name internally if possible, or Hindi if that's what we want to display everywhere
-        // Usually better to store a stable ID or English name, but display Hindi.
-        // For now, let's store the English name to be consistent with other parts of the app if they use slugs
+        // Save to localStorage
         localStorage.setItem('userCity', cityObj.name);
+        
+        // Save to backend
+        const token = localStorage.getItem('userToken');
+        if (token) {
+            try {
+                await updateProfile({
+                    selectedCity: cityObj.name,
+                    selectedDistrict: cityObj.name // Using same value for both for now
+                });
+            } catch (error) {
+                console.error('Error saving city to backend:', error);
+                // Continue even if backend fails
+            }
+        }
+        
         navigate(-1);
     };
 

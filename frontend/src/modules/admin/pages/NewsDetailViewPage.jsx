@@ -8,6 +8,7 @@ import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { getNewsById, deleteNews, updateNewsStatus } from '../services/newsService';
 
 function NewsDetailViewPage() {
     const navigate = useNavigate();
@@ -17,44 +18,32 @@ function NewsDetailViewPage() {
     const [loading, setLoading] = useState(true);
     const [news, setNews] = useState(null);
 
-    // Mock data - In real app, fetch from API
     useEffect(() => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            setNews({
-                id: parseInt(id),
-                title: 'नमूना समाचार शीर्षक - यह एक लंबा शीर्षक है जो कई पंक्तियों में फैल सकता है',
-                category: 'राजनीति',
-                categorySlug: 'politics',
-                district: 'जयपुर',
-                districtSlug: 'jaipur',
-                featuredImage: 'https://via.placeholder.com/800x450',
-                videoUrl: '',
-                isBreakingNews: true,
-                content: `
-                    <h2>मुख्य समाचार</h2>
-                    <p>यह एक नमूना समाचार सामग्री है जो विस्तृत जानकारी प्रदान करती है। यहाँ पर आप समाचार की पूरी जानकारी देख सकते हैं।</p>
-                    <p>समाचार में कई महत्वपूर्ण बिंदु शामिल हैं जो पाठकों के लिए उपयोगी हो सकते हैं।</p>
-                    <h3>महत्वपूर्ण जानकारी</h3>
-                    <ul>
-                        <li>पहला बिंदु</li>
-                        <li>दूसरा बिंदु</li>
-                        <li>तीसरा बिंदु</li>
-                    </ul>
-                    <p>यह समाचार विभिन्न स्रोतों से एकत्रित जानकारी पर आधारित है और पाठकों को सटीक और समय पर जानकारी प्रदान करने का प्रयास करता है।</p>
-                `,
-                author: 'राजेश कुमार',
-                publishDate: '2024-12-12',
-                status: 'published',
-                metaDescription: 'यह एक नमूना विवरण है जो SEO के लिए उपयोगी है।',
-                tags: 'समाचार, ब्रेकिंग, राजनीति, चुनाव',
-                views: 12500,
-                createdAt: '2024-12-10T10:30:00',
-                updatedAt: '2024-12-12T15:45:00'
-            });
+        const loadNews = async () => {
+            setLoading(true);
+            try {
+                const result = await getNewsById(id);
+                if (result.success && result.data) {
+                    setNews(result.data);
+                } else {
+                    showToast('समाचार नहीं मिला', 'error');
+                    setNews(null);
+                }
+            } catch (error) {
+                showToast(error.message || 'समाचार लोड करने में त्रुटि', 'error');
+                console.error('Error loading news:', error);
+                setNews(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        if (id) {
+            loadNews();
+        } else {
             setLoading(false);
-        }, 800);
+            setNews(null);
+        }
     }, [id]);
 
     const handleDelete = async () => {
@@ -64,23 +53,34 @@ function NewsDetailViewPage() {
         });
         if (confirmed) {
             setLoading(true);
-            // Simulate API call
-            setTimeout(() => {
+            try {
+                await deleteNews(id);
                 showToast('समाचार सफलतापूर्वक हटा दिया गया!', 'success');
                 setTimeout(() => navigate('/admin/news'), 1500);
-            }, 1000);
+            } catch (error) {
+                showToast(error.message || 'एक त्रुटि हुई', 'error');
+                console.error('Error deleting news:', error);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
-    const handleTogglePublish = () => {
+    const handleTogglePublish = async () => {
+        if (!news) return;
+        
         const newStatus = news.status === 'published' ? 'draft' : 'published';
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            await updateNewsStatus(id, newStatus);
             setNews({ ...news, status: newStatus });
-            setLoading(false);
             showToast(`समाचार ${newStatus === 'published' ? 'प्रकाशित' : 'ड्राफ्ट'} में बदल दिया गया!`, 'success');
-        }, 1000);
+        } catch (error) {
+            showToast('स्थिति अपडेट करने में त्रुटि', 'error');
+            console.error('Error updating status:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleViewPublished = () => {
@@ -280,7 +280,7 @@ function NewsDetailViewPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 mb-1">ID</p>
-                                    <p className="text-sm font-medium text-gray-900">#{news.id}</p>
+                                    <p className="text-sm font-medium text-gray-900">#{news.id || news.sequentialId || news._id || 'N/A'}</p>
                                 </div>
                             </div>
 

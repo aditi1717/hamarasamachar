@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getNewsById, getContentSections } from '../data/dummyNewsData';
+import { getNewsById as fetchNewsById } from '../services/newsService';
 import BottomNavbar from '../components/BottomNavbar';
 import ContentSection from '../components/ContentSection';
 
@@ -8,6 +8,8 @@ function NewsDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [news, setNews] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [videoDuration, setVideoDuration] = useState(null);
   const videoRef = useRef(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -64,14 +66,34 @@ function NewsDetailPage() {
     }
   }, [isLoggedIn]);
 
+  // Fetch news from API
   useEffect(() => {
-    const newsItem = getNewsById(id);
-    if (newsItem) {
-      setNews(newsItem);
-    } else {
-      navigate('/category/breaking');
-    }
-  }, [id, navigate]);
+    const loadNews = async () => {
+      if (!id) {
+        setError('Invalid news ID');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const newsData = await fetchNewsById(id);
+        if (newsData) {
+          setNews(newsData);
+        } else {
+          setError('समाचार नहीं मिला');
+        }
+      } catch (err) {
+        console.error('Error loading news:', err);
+        setError(err.message || 'समाचार लोड करने में विफल');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+  }, [id]);
 
   // Format duration in MM:SS format
   const formatDuration = (seconds) => {
@@ -167,15 +189,282 @@ function NewsDetailPage() {
     }
   };
 
-  if (!news) {
+  // Helper function to parse HTML content and convert to sections
+  const parseHTMLContent = (htmlContent) => {
+    if (!htmlContent || typeof htmlContent !== 'string') return [];
+    
+    const sections = [];
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Process all child nodes
+    const processNode = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent?.trim();
+        if (text) {
+          sections.push({
+            type: 'paragraph',
+            content: text
+          });
+        }
+        return;
+      }
+      
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      
+      const tagName = node.tagName?.toLowerCase();
+      
+      switch (tagName) {
+        case 'h1':
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          const headingText = node.textContent?.trim();
+          if (headingText) {
+            sections.push({
+              type: 'heading',
+              content: headingText
+            });
+          }
+          break;
+          
+        case 'p':
+          const paraText = node.textContent?.trim();
+          if (paraText) {
+            sections.push({
+              type: 'paragraph',
+              content: paraText
+            });
+          }
+          break;
+          
+        case 'img':
+          const imgSrc = node.getAttribute('src');
+          const imgAlt = node.getAttribute('alt') || '';
+          if (imgSrc) {
+            sections.push({
+              type: 'image',
+              url: imgSrc,
+              alt: imgAlt
+            });
+          }
+          break;
+          
+        case 'video':
+          const videoSrc = node.getAttribute('src');
+          if (videoSrc) {
+            sections.push({
+              type: 'video',
+              url: videoSrc
+            });
+          }
+          break;
+          
+        case 'ul':
+        case 'ol':
+          const listItems = Array.from(node.querySelectorAll('li')).map(li => li.textContent?.trim()).filter(Boolean);
+          if (listItems.length > 0) {
+            sections.push({
+              type: 'bullet',
+              items: listItems
+            });
+          }
+          break;
+          
+        case 'blockquote':
+          const quoteText = node.textContent?.trim();
+          if (quoteText) {
+            sections.push({
+              type: 'paragraph',
+              content: quoteText,
+              isQuote: true
+            });
+          }
+          break;
+          
+        case 'div':
+        case 'span':
+          // For div and span, process children but also check if it has direct text content
+          const directText = Array.from(node.childNodes)
+            .filter(n => n.nodeType === Node.TEXT_NODE)
+            .map(n => n.textContent?.trim())
+            .filter(Boolean)
+            .join(' ');
+          
+          if (directText) {
+            sections.push({
+              type: 'paragraph',
+              content: directText
+            });
+          }
+          
+          // Process child elements
+          Array.from(node.childNodes).forEach(processNode);
+          break;
+          
+        default:
+          // For other elements, process children
+          Array.from(node.childNodes).forEach(processNode);
+          break;
+      }
+    };
+    
+    // Process all top-level nodes
+    Array.from(tempDiv.childNodes).forEach(processNode);
+    
+    return sections;
+  };
+
+  // Helper function to get content sections from news data
+  const getContentSections = (newsItem) => {
+    if (!newsItem) return [];
+    
+    // Helper function to strip HTML tags and clean text
+    const stripHtmlTags = (html) => {
+      if (!html) return '';
+      // Remove HTML tags but keep the text content
+      const tmp = document.createElement('DIV');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    };
+    
+    // Helper to check if URL matches featured media
+    const isFeaturedMedia = (url, featuredUrl) => {
+      if (!url || !featuredUrl) return false;
+      // Compare URLs (handle both full URLs and relative paths)
+      return url === featuredUrl || url.includes(featuredUrl) || featuredUrl.includes(url);
+    };
+    
+    const sections = [];
+    
+    // PRIORITY 1: If contentSections exist in database, use them (but filter out featured image/video)
+    if (newsItem.contentSections && Array.isArray(newsItem.contentSections) && newsItem.contentSections.length > 0) {
+      const filteredSections = newsItem.contentSections.filter(section => {
+        if (section.type === 'image' && isFeaturedMedia(section.url, newsItem.image)) {
+          return false; // Skip featured image
+        }
+        if (section.type === 'video' && isFeaturedMedia(section.url, newsItem.videoUrl)) {
+          return false; // Skip featured video
+        }
+        // Strip HTML tags from paragraph content
+        if (section.type === 'paragraph' && section.content) {
+          section.content = stripHtmlTags(section.content);
+        }
+        return true;
+      });
+      
+      if (filteredSections.length > 0) {
+        return filteredSections;
+      }
+    }
+    
+    // PRIORITY 2: Parse content field (admin panel में जो HTML content save होता है)
+    if (newsItem.content && typeof newsItem.content === 'string' && newsItem.content.trim()) {
+      const hasHtmlTags = /<[^>]*>/g.test(newsItem.content);
+      
+      if (hasHtmlTags) {
+        // Parse HTML content into sections
+        const parsedSections = parseHTMLContent(newsItem.content);
+        // Filter out featured image/video from parsed sections
+        const filteredSections = parsedSections.filter(section => {
+          if (section.type === 'image' && isFeaturedMedia(section.url, newsItem.image)) {
+            return false;
+          }
+          if (section.type === 'video' && isFeaturedMedia(section.url, newsItem.videoUrl)) {
+            return false;
+          }
+          return true;
+        });
+        
+        if (filteredSections.length > 0) {
+          return filteredSections;
+        }
+      } else {
+        // Plain text content - add as paragraph
+        const cleanContent = newsItem.content.trim();
+        if (cleanContent) {
+          sections.push({
+            type: 'paragraph',
+            content: cleanContent
+          });
+        }
+      }
+    }
+    
+    // PRIORITY 3: Fallback to description/subtitleText if no content
+    if (sections.length === 0) {
+      // Add heading
+      sections.push({
+        type: 'heading',
+        content: 'मुख्य बातें'
+      });
+      
+      // Add description if available
+      if (newsItem.description) {
+        const cleanDescription = stripHtmlTags(newsItem.description);
+        if (cleanDescription.trim()) {
+          sections.push({
+            type: 'paragraph',
+            content: cleanDescription
+          });
+        }
+      }
+      
+      // Add subtitleText if available
+      if (newsItem.subtitleText && newsItem.subtitleText !== newsItem.description) {
+        const cleanSubtitle = stripHtmlTags(newsItem.subtitleText);
+        if (cleanSubtitle.trim() && cleanSubtitle !== stripHtmlTags(newsItem.description)) {
+          sections.push({
+            type: 'paragraph',
+            content: cleanSubtitle
+          });
+        }
+      }
+      
+      // If no sections created (only heading), add a default message
+      if (sections.length === 1) {
+        sections.push({
+          type: 'paragraph',
+          content: newsItem.title || 'समाचार की विस्तृत जानकारी उपलब्ध नहीं है।'
+        });
+      }
+    }
+    
+    return sections;
+  };
+
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-gray-500">समाचार लोड हो रहा है...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E21E26] mx-auto mb-4"></div>
+          <p className="text-gray-500">समाचार लोड हो रहा है...</p>
+        </div>
       </div>
     );
   }
 
-  // Get content sections from news data using helper function
+  // Error state
+  if (error || !news) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center px-4">
+          <p className="text-red-500 mb-4">{error || 'समाचार नहीं मिला'}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 bg-[#E21E26] text-white rounded-lg hover:bg-[#C21A20] transition-colors"
+          >
+            वापस जाएं
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Get content sections from news data
   const contentSections = getContentSections(news);
 
   return (
@@ -224,7 +513,10 @@ function NewsDetailPage() {
               className={`w-full h-48 sm:h-64 md:h-80 lg:h-96 relative bg-gray-200 ${news.type === 'video' && news.videoUrl ? 'cursor-pointer' : ''}`}
               onClick={() => {
                 if (news.type === 'video' && news.videoUrl) {
-                  navigate(`/shorts?video=${news.id}`);
+                  const newsId = news.id || news._id;
+                  if (newsId) {
+                    navigate(`/shorts?video=${newsId}`);
+                  }
                 }
               }}
             >

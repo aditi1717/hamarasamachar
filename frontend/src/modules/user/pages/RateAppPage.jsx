@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { submitRating, getMyRating } from '../services/ratingService';
 
 
 function RateAppPage() {
@@ -7,32 +8,64 @@ function RateAppPage() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Load existing rating from backend
+    const loadRating = async () => {
+      try {
+        const rating = await getMyRating();
+        if (rating) {
+          setSelectedRating(rating.rating);
+          if (rating.comment) {
+            setFeedback(rating.comment);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading rating:', error);
+      }
+    };
+
+    loadRating();
+  }, []);
 
   const handleRatingClick = (rating) => {
     setSelectedRating(rating);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedRating === 0) {
       alert('कृपया रेटिंग चुनें');
       return;
     }
 
-    // Save rating to localStorage
-    const ratingData = {
-      rating: selectedRating,
-      feedback: feedback,
-      date: new Date().toISOString()
-    };
+    setLoading(true);
 
-    const existingRatings = JSON.parse(localStorage.getItem('appRatings') || '[]');
-    existingRatings.push(ratingData);
-    localStorage.setItem('appRatings', JSON.stringify(existingRatings));
+    try {
+      // Submit to backend
+      await submitRating(selectedRating, feedback.trim());
 
-    setSubmitted(true);
-    setTimeout(() => {
-      navigate(-1);
-    }, 2000);
+      // Also save to localStorage as backup
+      const ratingData = {
+        rating: selectedRating,
+        feedback: feedback.trim(),
+        date: new Date().toISOString()
+      };
+
+      const existingRatings = JSON.parse(localStorage.getItem('appRatings') || '[]');
+      existingRatings.push(ratingData);
+      localStorage.setItem('appRatings', JSON.stringify(existingRatings));
+
+      setSubmitted(true);
+      setTimeout(() => {
+        navigate(-1);
+      }, 2000);
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert(error.message || 'रेटिंग सबमिट करने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -150,13 +183,13 @@ function RateAppPage() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={selectedRating === 0}
-              className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-colors ${selectedRating === 0
+              disabled={selectedRating === 0 || loading}
+              className={`w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white transition-colors ${selectedRating === 0 || loading
                 ? 'bg-gray-300 cursor-not-allowed'
                 : 'bg-[#E21E26] hover:bg-[#C21A20]'
                 }`}
             >
-              सबमिट करें
+              {loading ? 'सबमिट कर रहे हैं...' : 'सबमिट करें'}
             </button>
           </div>
         </div>

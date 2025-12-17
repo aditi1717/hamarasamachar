@@ -30,6 +30,7 @@ export const CATEGORY_SLUGS = {
   'ब्रेकिंग': 'breaking',
   'राजस्थान': 'rajasthan',
   'संपादकीय': 'editorial',
+  'बाइट': 'byte',
   'इंटरव्यू': 'interview',
   'चुनाव': 'election',
   'क्राइम': 'crime',

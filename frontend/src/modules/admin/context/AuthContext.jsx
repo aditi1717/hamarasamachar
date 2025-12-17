@@ -9,13 +9,44 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if admin is already logged in
-    const currentAdmin = authService.getCurrentAdmin();
-    setAdmin(currentAdmin);
-    setLoading(false);
+    const checkAuth = async () => {
+      try {
+        const currentAdmin = authService.getCurrentAdmin();
+        
+        // If admin found in storage, verify with API
+        if (currentAdmin) {
+          try {
+            const verifiedAdmin = await authService.getCurrentAdminFromAPI();
+            if (verifiedAdmin) {
+              setAdmin(verifiedAdmin);
+              startActivityTracking();
+            } else {
+              // Token invalid, clear storage
+              authService.logout();
+              setAdmin(null);
+            }
+          } catch (error) {
+            // API call failed, clear storage
+            console.warn('Failed to verify admin token:', error);
+            authService.logout();
+            setAdmin(null);
+          }
+        } else {
+          setAdmin(null);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setAdmin(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (currentAdmin) {
-      startActivityTracking();
-    }
+    // Run checkAuth but don't block rendering
+    checkAuth().catch(err => {
+      console.error('Auth check failed:', err);
+      setLoading(false);
+    });
 
     return () => {
       stopActivityTracking();
@@ -58,13 +89,14 @@ export const AuthProvider = ({ children }) => {
     updateProfile
   };
 
+  // Always render children - don't block rendering even if auth check fails
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider. Make sure AuthProvider wraps your component tree in App.jsx');
   }
   return context;
 };

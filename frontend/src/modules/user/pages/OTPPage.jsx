@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { sendOTP, verifyOTP } from '../services/authService';
 
 function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const mobileNumber = location.state?.mobileNumber || '+916264560457';
 
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']); // Changed to 6 digits
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState('');
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -53,10 +57,17 @@ function OTPPage() {
     const newOtp = [...otp];
     newOtp[index] = value.replace(/\D/g, ''); // Only numbers
     setOtp(newOtp);
+    setError(''); // Clear error on input
 
     // Auto focus next input
-    if (value && index < 3 && inputRefs.current[index + 1]) {
+    if (value && index < 5 && inputRefs.current[index + 1]) {
       inputRefs.current[index + 1].focus();
+    }
+
+    // Auto verify when 6 digits are entered
+    if (newOtp.every(digit => digit !== '') && newOtp.length === 6) {
+      const otpString = newOtp.join('');
+      handleConfirm(otpString);
     }
   };
 
@@ -68,40 +79,106 @@ function OTPPage() {
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     const newOtp = [...otp];
     pastedData.split('').forEach((digit, index) => {
-      if (index < 4) {
+      if (index < 6) {
         newOtp[index] = digit;
       }
     });
     setOtp(newOtp);
-    if (pastedData.length === 4 && inputRefs.current[3]) {
-      inputRefs.current[3].focus();
+    if (pastedData.length === 6 && inputRefs.current[5]) {
+      inputRefs.current[5].focus();
+      // Auto verify
+      handleConfirm(pastedData);
+    } else if (pastedData.length > 0 && inputRefs.current[Math.min(pastedData.length - 1, 5)]) {
+      inputRefs.current[Math.min(pastedData.length - 1, 5)].focus();
     }
   };
 
-  const handleConfirm = () => {
-    const otpString = otp.join('');
-    if (otpString.length === 4) {
-      // TODO: Verify OTP with backend
-      // Save mobile number to localStorage
-      if (mobileNumber) {
-        localStorage.setItem('userMobileNumber', mobileNumber);
+  const handleConfirm = async (otpValue = null) => {
+    const otpString = otpValue || otp.join('');
+    
+    if (otpString.length !== 6) {
+      setError('कृपया 6 अंकों का OTP दर्ज करें');
+      return;
+    }
+
+    setVerifying(true);
+    setError('');
+
+    try {
+      const response = await verifyOTP(mobileNumber, otpString, 'registration');
+      
+      if (response.success) {
+        // Save mobile number to localStorage
+        if (mobileNumber) {
+          localStorage.setItem('userMobileNumber', mobileNumber);
+        }
+        // Save token if received
+        if (response.token) {
+          localStorage.setItem('userToken', response.token);
+        }
+        // Save user data
+        if (response.user) {
+          localStorage.setItem('userData', JSON.stringify(response.user));
+        }
+        
+        // Check if profile is complete
+        // If profile is complete, go to home page
+        // If profile is incomplete, go to profile setup
+        if (response.isProfileComplete) {
+          // Profile already complete, go to home
+          navigate('/category/breaking');
+        } else {
+          // Profile incomplete, go to profile setup
+          navigate('/profile-setup');
+        }
+      } else {
+        setError(response.message || 'OTP गलत है। कृपया पुनः प्रयास करें।');
+        // Clear OTP on error
+        setOtp(['', '', '', '', '', '']);
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
       }
-      navigate('/profile-setup');
-    } else {
-      alert('कृपया 4 अंकों का OTP दर्ज करें');
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      setError(error.message || 'OTP वेरीफाई करने में समस्या हुई। कृपया पुनः प्रयास करें।');
+      // Clear OTP on error
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+    } finally {
+      setVerifying(false);
     }
   };
 
-  const handleResend = () => {
-    setTimer(60);
-    setCanResend(false);
-    setOtp(['', '', '', '']);
-    // TODO: Resend OTP
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus();
+  const handleResend = async () => {
+    if (!canResend) return;
+
+    setLoading(true);
+    setError('');
+    setOtp(['', '', '', '', '', '']);
+
+    try {
+      const response = await sendOTP(mobileNumber, 'registration');
+      
+      if (response.success) {
+        setTimer(60);
+        setCanResend(false);
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
+      } else {
+        setError(response.message || 'OTP भेजने में समस्या हुई');
+      }
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      setError(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -144,8 +221,15 @@ function OTPPage() {
         <div className="w-full max-w-sm sm:max-w-md">
           {/* Instruction */}
           <p className="text-center text-sm sm:text-base text-gray-900 mb-4 sm:mb-5 leading-snug">
-            {mobileNumber} पर भेजे गये 4 अंकों का कोड दर्ज करें
+            {mobileNumber} पर भेजे गये 6 अंकों का कोड दर्ज करें
           </p>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-xs text-center">{error}</p>
+            </div>
+          )}
 
           {/* OTP Input Fields */}
           <div className="flex justify-center gap-2 sm:gap-3 mb-5 sm:mb-6">
@@ -160,10 +244,11 @@ function OTPPage() {
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
+                disabled={verifying}
                 className={`w-12 h-12 sm:w-14 sm:h-14 text-center text-xl sm:text-2xl font-bold border-2 rounded-xl outline-none transition-all shadow-sm ${digit
                   ? 'border-[#E21E26] bg-[#E21E26]/5 text-[#E21E26]'
                   : 'border-gray-200 bg-white focus:border-[#E21E26] focus:ring-4 focus:ring-[#E21E26]/10'
-                  }`}
+                  } ${verifying ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             ))}
           </div>
@@ -178,24 +263,24 @@ function OTPPage() {
             </button>
             <button
               onClick={handleResend}
-              disabled={!canResend}
-              className={`text-xs sm:text-sm font-medium transition-opacity ${canResend ? 'text-[#E21E26] hover:opacity-80' : 'text-gray-400'
+              disabled={!canResend || loading}
+              className={`text-xs sm:text-sm font-medium transition-opacity ${canResend && !loading ? 'text-[#E21E26] hover:opacity-80' : 'text-gray-400'
                 }`}
             >
-              OTP दोबारा भेजें {!canResend && `(${formatTime(timer)})`}
+              {loading ? 'भेज रहे हैं...' : `OTP दोबारा भेजें ${!canResend ? `(${formatTime(timer)})` : ''}`}
             </button>
           </div>
 
           {/* Confirm Button */}
           <button
-            onClick={handleConfirm}
-            disabled={otp.join('').length !== 4}
-            className={`w-full py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-md transform transition-all duration-200 active:scale-95 mb-3 ${otp.join('').length === 4
+            onClick={() => handleConfirm()}
+            disabled={otp.join('').length !== 6 || verifying}
+            className={`w-full py-2.5 rounded-xl font-bold text-sm tracking-wide shadow-md transform transition-all duration-200 active:scale-95 mb-3 ${otp.join('').length === 6 && !verifying
               ? 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] text-white hover:shadow-[#E21E26]/30 hover:-translate-y-0.5'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
               }`}
           >
-            पुष्टि करें
+            {verifying ? 'वेरीफाई कर रहे हैं...' : 'पुष्टि करें'}
           </button>
 
           {/* Skip Button */}

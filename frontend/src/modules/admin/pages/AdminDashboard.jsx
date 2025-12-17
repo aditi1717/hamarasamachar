@@ -1,15 +1,15 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/colors';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
+import { dashboardService } from '../services/dashboardService';
 
 function AdminDashboard() {
   const { admin } = useAuth();
   const navigate = useNavigate();
-
-  // Mock data - replace with API calls later
-  const stats = {
+  const [stats, setStats] = useState({
     totalNews: {
       published: 1250,
       draft: 45,
@@ -40,12 +40,43 @@ function AdminDashboard() {
       totalFeedback: 340,
       averageRating: 4.5
     },
-    recentActivity: [
-      { id: 1, action: 'बनाया', item: 'समाचार लेख', user: admin?.name || 'एडमिन', time: '10 मिनट पहले' },
-      { id: 2, action: 'संपादित', item: 'श्रेणी सेटिंग्स', user: admin?.name || 'एडमिन', time: '1 घंटा पहले' },
-      { id: 3, action: 'प्रकाशित', item: 'ब्रेकिंग न्यूज़', user: admin?.name || 'एडमिन', time: '2 घंटे पहले' }
-    ]
+    recentActivity: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const dashboardStats = await dashboardService.getStats();
+      setStats(dashboardStats);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+      // Keep default stats on error
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <Layout title="एडमिन डैशबोर्ड" showPageHeader={false}>
+          <main className="flex-1 overflow-y-auto p-2 sm:p-3 animate-fade-in">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: '#E21E26' }}></div>
+                <p className="text-gray-600">लोड हो रहा है...</p>
+              </div>
+            </div>
+          </main>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -162,7 +193,12 @@ function AdminDashboard() {
                         <div className="w-full bg-gray-100 rounded-full h-1.5">
                           <div
                             className="bg-[#E21E26] h-1.5 rounded-full"
-                            style={{ width: `${(cat.count / 320) * 100}%`, opacity: 1 - (idx * 0.2) }}
+                            style={{ 
+                              width: `${stats.categories.breakdown.length > 0 && stats.categories.breakdown[0].count > 0 
+                                ? (cat.count / stats.categories.breakdown[0].count) * 100 
+                                : 0}%`, 
+                              opacity: 1 - (idx * 0.2) 
+                            }}
                           ></div>
                         </div>
                       </div>
@@ -194,15 +230,19 @@ function AdminDashboard() {
                   <span className="text-2xl font-bold text-gray-900">{stats.breakingNews.active}</span>
                 </div>
                 <div className="space-y-3">
-                  {stats.breakingNews.recent.map((item) => (
-                    <div key={item.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors cursor-default">
-                      <p className="text-sm font-semibold text-gray-800 line-clamp-1 mb-1">{item.title}</p>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        {item.time}
+                  {stats.breakingNews.recent && stats.breakingNews.recent.length > 0 ? (
+                    stats.breakingNews.recent.map((item) => (
+                      <div key={item.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors cursor-default">
+                        <p className="text-sm font-semibold text-gray-800 line-clamp-1 mb-1">{item.title}</p>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          {item.time}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">कोई ब्रेकिंग न्यूज़ नहीं</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -258,27 +298,31 @@ function AdminDashboard() {
                 </div>
               </div>
               <div className="space-y-3">
-                {stats.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 hover:bg-white transition-all">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-sm"
-                      style={{ backgroundColor: activity.action === 'प्रकाशित' ? '#10B981' : activity.action === 'संपादित' ? '#F59E0B' : '#E21E26' }}
-                    >
-                      {activity.user.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                        <p className="text-sm font-medium text-gray-900">
-                          <span className="font-bold">{activity.user}</span> ने {activity.item} {activity.action}
-                        </p>
-                        <span className="text-xs text-gray-400 mt-1 sm:mt-0 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          {activity.time}
-                        </span>
+                {stats.recentActivity && stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-transparent hover:border-gray-200 hover:bg-white transition-all">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-sm"
+                        style={{ backgroundColor: activity.action === 'प्रकाशित' ? '#10B981' : activity.action === 'संपादित' ? '#F59E0B' : '#E21E26' }}
+                      >
+                        {activity.user ? activity.user.charAt(0) : 'A'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                          <p className="text-sm font-medium text-gray-900">
+                            <span className="font-bold">{activity.user || 'एडमिन'}</span> ने {activity.item} {activity.action}
+                          </p>
+                          <span className="text-xs text-gray-400 mt-1 sm:mt-0 flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {activity.time}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">कोई हाल की गतिविधि नहीं</p>
+                )}
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Table from '../components/Table';
@@ -9,69 +9,52 @@ import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { getAllNews, bulkDeleteNews, updateNewsStatus, duplicateNews } from '../services/newsService';
 
 function NewsListPage() {
     const navigate = useNavigate();
     const { toast, showToast, hideToast } = useToast();
     const { confirmDialog, showConfirm } = useConfirm();
     const [selectedItems, setSelectedItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [news, setNews] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [limit] = useState(25);
 
     // Filters state
     const [filters, setFilters] = useState({
         status: '',
         category: '',
         author: '',
-        dateRange: ''
+        dateRange: '',
+        search: ''
     });
 
-    // Mock Data
-    const [news, setNews] = useState([
-        {
-            id: 1,
-            title: 'बजट 2024: किसानों के लिए बड़ी घोषणाएं',
-            category: 'राजनीति',
-            author: 'राजेश कुमार',
-            date: '2024-02-01',
-            status: 'published',
-            views: 12500
-        },
-        {
-            id: 2,
-            title: 'भारत ने जीता रोमांचक क्रिकेट मैच',
-            category: 'खेलकूद',
-            author: 'अमित वर्मा',
-            date: '2024-01-28',
-            status: 'published',
-            views: 45000
-        },
-        {
-            id: 3,
-            title: 'नई इलेक्ट्रिक कार लॉन्च, जानें फीचर्स',
-            category: 'टेक्नोलॉजी',
-            author: 'प्रिया सिंह',
-            date: '2024-02-02',
-            status: 'draft',
-            views: 0
-        },
-        {
-            id: 4,
-            title: 'शहर में भारी बारिश का अलर्ट',
-            category: 'मौसम',
-            author: 'सुनील शर्मा',
-            date: '2024-02-03',
-            status: 'published',
-            views: 8900
-        },
-        {
-            id: 5,
-            title: 'फिल्म जगत की ताजा खबरें',
-            category: 'मनोरंजन',
-            author: 'नेहा गुप्ता',
-            date: '2024-01-30',
-            status: 'draft',
-            views: 0
+    // Fetch news data
+    useEffect(() => {
+        loadNews();
+    }, [filters, currentPage]);
+
+    const loadNews = async () => {
+        setLoading(true);
+        try {
+            const result = await getAllNews({
+                ...filters,
+                page: currentPage,
+                limit: limit
+            });
+            if (result.success) {
+                setNews(result.data || []);
+                setTotal(result.total || 0);
+            }
+        } catch (error) {
+            showToast('समाचार लोड करने में त्रुटि', 'error');
+            console.error('Error loading news:', error);
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
     // Columns Configuration
     const columns = [
@@ -82,7 +65,7 @@ function NewsListPage() {
                     type="checkbox"
                     onChange={(e) => {
                         if (e.target.checked) {
-                            setSelectedItems(news.map(n => n.id));
+                            setSelectedItems(news.map(n => n._id || n.id));
                         } else {
                             setSelectedItems([]);
                         }
@@ -94,13 +77,13 @@ function NewsListPage() {
             render: (_, row) => (
                 <input
                     type="checkbox"
-                    checked={selectedItems.includes(row.id)}
+                    checked={selectedItems.includes(row._id || row.id)}
                     onChange={(e) => {
                         e.stopPropagation();
                         if (e.target.checked) {
-                            setSelectedItems([...selectedItems, row.id]);
+                            setSelectedItems([...selectedItems, row._id || row.id]);
                         } else {
-                            setSelectedItems(selectedItems.filter(id => id !== row.id));
+                            setSelectedItems(selectedItems.filter(id => id !== (row._id || row.id)));
                         }
                     }}
                     className="rounded border-gray-300 text-[#E21E26] focus:ring-[#E21E26]"
@@ -108,7 +91,7 @@ function NewsListPage() {
             ),
             sortable: false
         },
-        { key: 'id', label: 'ID', sortable: true },
+        { key: 'id', label: 'ID', sortable: true, render: (val, row) => row.id || row.sequentialId || 'N/A' },
         {
             key: 'title',
             label: 'शीर्षक',
@@ -132,7 +115,7 @@ function NewsListPage() {
             label: 'दिनांक',
             sortable: true,
             className: 'hidden lg:table-cell',
-            render: (val) => new Date(val).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+            render: (val) => val ? new Date(val).toLocaleDateString('hi-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'
         },
         {
             key: 'status',
@@ -142,7 +125,7 @@ function NewsListPage() {
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        handleStatusToggle(row.id);
+                        handleStatusToggle(row._id || row.id);
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${val === 'published'
                         ? 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -156,12 +139,26 @@ function NewsListPage() {
     ];
 
     // Actions
-    const handleStatusToggle = (id) => {
-        setNews(news.map(item =>
-            item.id === id
-                ? { ...item, status: item.status === 'published' ? 'draft' : 'published' }
-                : item
-        ));
+    const handleStatusToggle = async (id) => {
+        try {
+            const newsItem = news.find(n => (n._id || n.id) === id);
+            if (!newsItem) return;
+
+            const newStatus = newsItem.status === 'published' ? 'draft' : 'published';
+            await updateNewsStatus(id, newStatus);
+            
+            // Update local state
+            setNews(news.map(item =>
+                (item._id || item.id) === id
+                    ? { ...item, status: newStatus }
+                    : item
+            ));
+            
+            showToast(`समाचार ${newStatus === 'published' ? 'प्रकाशित' : 'ड्राफ्ट'} में बदल दिया गया!`, 'success');
+        } catch (error) {
+            showToast('स्थिति अपडेट करने में त्रुटि', 'error');
+            console.error('Error updating status:', error);
+        }
     };
 
     const handleBulkAction = async (action) => {
@@ -172,14 +169,23 @@ function NewsListPage() {
             type: 'warning'
         });
         if (confirmed) {
-            if (action === 'delete') {
-                setNews(news.filter(n => !selectedItems.includes(n.id)));
-                showToast(`${selectedItems.length} समाचार सफलतापूर्वक हटा दिए गए!`, 'success');
-            } else if (action === 'publish') {
-                setNews(news.map(n => selectedItems.includes(n.id) ? { ...n, status: 'published' } : n));
-                showToast(`${selectedItems.length} समाचार प्रकाशित किए गए!`, 'success');
+            try {
+                if (action === 'delete') {
+                    await bulkDeleteNews(selectedItems);
+                    showToast(`${selectedItems.length} समाचार सफलतापूर्वक हटा दिए गए!`, 'success');
+                    setSelectedItems([]);
+                    loadNews();
+                } else if (action === 'publish') {
+                    // Update each news status
+                    await Promise.all(selectedItems.map(id => updateNewsStatus(id, 'published')));
+                    showToast(`${selectedItems.length} समाचार प्रकाशित किए गए!`, 'success');
+                    setSelectedItems([]);
+                    loadNews();
+                }
+            } catch (error) {
+                showToast('कार्रवाई करने में त्रुटि', 'error');
+                console.error('Error performing bulk action:', error);
             }
-            setSelectedItems([]);
         }
     };
 
@@ -192,7 +198,7 @@ function NewsListPage() {
                     <circle cx="12" cy="12" r="3" />
                 </svg>
             ),
-            onClick: (row) => navigate(`/admin/news/view/${row.id}`),
+            onClick: (row) => navigate(`/admin/news/view/${row._id || row.id}`),
             variant: 'secondary'
         },
         {
@@ -203,7 +209,7 @@ function NewsListPage() {
                     <path d="m15 5 4 4" />
                 </svg>
             ),
-            onClick: (row) => navigate(`/admin/news/edit/${row.id}`),
+            onClick: (row) => navigate(`/admin/news/edit/${row._id || row.id}`),
             variant: 'secondary'
         },
         {
@@ -214,10 +220,15 @@ function NewsListPage() {
                     <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                 </svg>
             ),
-            onClick: (row) => {
-                const newId = Math.max(...news.map(n => n.id)) + 1;
-                const newItem = { ...row, id: newId, title: `${row.title} (Copy)`, status: 'draft' };
-                setNews([newItem, ...news]);
+            onClick: async (row) => {
+                try {
+                    await duplicateNews(row._id || row.id);
+                    showToast('समाचार डुप्लिकेट हो गया!', 'success');
+                    loadNews();
+                } catch (error) {
+                    showToast('डुप्लिकेट करने में त्रुटि', 'error');
+                    console.error('Error duplicating news:', error);
+                }
             },
             variant: 'secondary'
         },
@@ -236,13 +247,22 @@ function NewsListPage() {
                     type: 'danger'
                 });
                 if (confirmed) {
-                    setNews(news.filter(n => n.id !== row.id));
-                    showToast('समाचार सफलतापूर्वक हटा दिया गया!', 'success');
+                    try {
+                        const { deleteNews } = await import('../services/newsService');
+                        await deleteNews(row._id || row.id);
+                        showToast('समाचार सफलतापूर्वक हटा दिया गया!', 'success');
+                        loadNews();
+                    } catch (error) {
+                        showToast('हटाने में त्रुटि', 'error');
+                        console.error('Error deleting news:', error);
+                    }
                 }
             },
             variant: 'danger'
         }
     ];
+
+    const totalPages = Math.ceil(total / limit);
 
     return (
         <ProtectedRoute>
@@ -312,10 +332,7 @@ function NewsListPage() {
                             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                             options={[
                                 { value: '', label: 'सभी श्रेणियाँ' },
-                                { value: 'politics', label: 'राजनीति' },
-                                { value: 'sports', label: 'खेलकूद' },
-                                { value: 'technology', label: 'टेक्नोलॉजी' },
-                                { value: 'entertainment', label: 'मनोरंजन' }
+                                // Categories will be loaded dynamically if needed
                             ]}
                         />
                         <Form.Field
@@ -330,16 +347,11 @@ function NewsListPage() {
                             ]}
                         />
                         <Form.Field
-                            type="select"
+                            type="text"
                             name="author"
                             value={filters.author}
                             onChange={(e) => setFilters({ ...filters, author: e.target.value })}
-                            options={[
-                                { value: '', label: 'सभी लेखक' },
-                                { value: 'admin', label: 'एडमिन' },
-                                { value: 'rajesh', label: 'राजेश कुमार' },
-                                { value: 'amit', label: 'अमित वर्मा' }
-                            ]}
+                            placeholder="लेखक खोजें..."
                         />
                         <Form.Field
                             type="date"
@@ -351,29 +363,61 @@ function NewsListPage() {
                     </div>
 
                     {/* News Table */}
-                    <Table
-                        columns={columns}
-                        data={news}
-                        searchable={true}
-                        sortable={true}
-                        actions={rowActions}
-                        className="shadow-sm"
-                        emptyMessage="कोई समाचार नहीं मिला"
-                    />
-
-                    {/* Pagination (Static Mock) */}
-                    <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
-                        <div className="text-sm text-gray-500">
-                            कुल <span className="font-semibold">{news.length}</span> समाचार
+                    {loading ? (
+                        <div className="flex items-center justify-center min-h-[400px]">
+                            <div className="text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E21E26] mx-auto mb-4"></div>
+                                <p className="text-gray-600">लोड हो रहा है...</p>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>पिछला</button>
-                            <button className="px-3 py-1 border rounded bg-[#E21E26] text-white">1</button>
-                            <button className="px-3 py-1 border rounded hover:bg-gray-50">2</button>
-                            <button className="px-3 py-1 border rounded hover:bg-gray-50">अगला</button>
-                        </div>
-                    </div>
+                    ) : (
+                        <>
+                            <Table
+                                columns={columns}
+                                data={news}
+                                searchable={true}
+                                onSearch={(searchTerm) => setFilters({ ...filters, search: searchTerm })}
+                                sortable={true}
+                                actions={rowActions}
+                                className="shadow-sm"
+                                emptyMessage="कोई समाचार नहीं मिला"
+                            />
 
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
+                                    <div className="text-sm text-gray-500">
+                                        कुल <span className="font-semibold">{total}</span> समाचार
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                        >
+                                            पिछला
+                                        </button>
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                            <button
+                                                key={page}
+                                                className={`px-3 py-1 border rounded ${currentPage === page ? 'bg-[#E21E26] text-white' : 'hover:bg-gray-50'}`}
+                                                onClick={() => setCurrentPage(page)}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                        <button
+                                            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50"
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage(currentPage + 1)}
+                                        >
+                                            अगला
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </Layout>
         </ProtectedRoute>

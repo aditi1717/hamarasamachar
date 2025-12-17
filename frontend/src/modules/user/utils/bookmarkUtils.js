@@ -9,7 +9,8 @@ export const getBookmarkedNewsIds = () => {
 // Check if a news item is bookmarked
 export const isNewsBookmarked = (newsId) => {
   const bookmarkedIds = getBookmarkedNewsIds();
-  return bookmarkedIds.includes(newsId);
+  // Handle both string and number IDs
+  return bookmarkedIds.some(id => String(id) === String(newsId));
 };
 
 // Add news to bookmarks
@@ -28,8 +29,33 @@ export const removeFromBookmarks = (newsId) => {
   localStorage.setItem('bookmarkedNews', JSON.stringify(updatedIds));
 };
 
-// Toggle bookmark status
-export const toggleBookmark = (newsId) => {
+// Toggle bookmark status - syncs with API if authenticated, otherwise uses localStorage
+export const toggleBookmark = async (newsId) => {
+  const token = localStorage.getItem('userToken');
+  
+  // If authenticated, use API
+  if (token) {
+    try {
+      const { toggleBookmark: toggleBookmarkAPI } = await import('../services/bookmarkService');
+      const isBookmarked = await toggleBookmarkAPI(newsId);
+      
+      // Also update localStorage for consistency
+      if (isBookmarked) {
+        addToBookmarks(newsId);
+      } else {
+        removeFromBookmarks(newsId);
+      }
+      
+      // Dispatch custom event for same-tab updates
+      window.dispatchEvent(new CustomEvent('bookmarksChanged', { detail: { newsId, isBookmarked } }));
+      return isBookmarked;
+    } catch (error) {
+      console.error('Error toggling bookmark via API:', error);
+      // Fallback to localStorage on error
+    }
+  }
+  
+  // Fallback to localStorage if not authenticated or API fails
   let isBookmarked = false;
   if (isNewsBookmarked(newsId)) {
     removeFromBookmarks(newsId);
@@ -46,6 +72,9 @@ export const toggleBookmark = (newsId) => {
 // Get all bookmarked news objects
 export const getBookmarkedNews = (allNews) => {
   const bookmarkedIds = getBookmarkedNewsIds();
-  return allNews.filter(news => bookmarkedIds.includes(news.id));
+  return allNews.filter(news => {
+    const newsId = news.id || news._id;
+    return bookmarkedIds.some(id => String(id) === String(newsId));
+  });
 };
 

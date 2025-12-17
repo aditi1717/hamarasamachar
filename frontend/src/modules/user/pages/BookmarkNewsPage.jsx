@@ -1,48 +1,75 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getBookmarkedNews } from '../utils/bookmarkUtils';
-import { getAllNews } from '../data/dummyNewsData';
+import { getBookmarks } from '../services/bookmarkService';
 import NewsCard from '../components/NewsCard';
-
+import BottomNavbar from '../components/BottomNavbar';
 
 function BookmarkNewsPage() {
   const navigate = useNavigate();
   const [bookmarkedNews, setBookmarkedNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check authentication status
   useEffect(() => {
-    // Initialize with some dummy bookmarked data if no bookmarks exist
-    const bookmarkedIds = JSON.parse(localStorage.getItem('bookmarkedNews') || '[]');
-    if (bookmarkedIds.length === 0) {
-      // Add some dummy bookmarks for testing (first 5 news items)
-      const initialBookmarks = [1, 2, 3, 4, 5];
-      localStorage.setItem('bookmarkedNews', JSON.stringify(initialBookmarks));
-    }
-
-    // Get all news and filter bookmarked ones
-    const allNews = getAllNews();
-    const bookmarked = getBookmarkedNews(allNews);
-    setBookmarkedNews(bookmarked);
+    const token = localStorage.getItem('userToken');
+    setIsAuthenticated(!!token);
   }, []);
 
-  // Listen for storage changes and custom events to update bookmarks
+  // Fetch bookmarked news from API
   useEffect(() => {
-    const handleBookmarkChange = () => {
-      const allNews = getAllNews();
-      const bookmarked = getBookmarkedNews(allNews);
-      setBookmarkedNews(bookmarked);
+    const fetchBookmarks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          setError('कृपया लॉगिन करें');
+          setLoading(false);
+          return;
+        }
+
+        const response = await getBookmarks({ limit: 100 });
+        setBookmarkedNews(response.data || []);
+      } catch (err) {
+        console.error('Error fetching bookmarks:', err);
+        setError(err.message || 'बुकमार्क लोड करने में त्रुटि हुई');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchBookmarks();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // Listen for bookmark changes to refresh the list
+  useEffect(() => {
+    const handleBookmarkChange = async () => {
+      const token = localStorage.getItem('userToken');
+      if (!token) return;
+
+      try {
+        const response = await getBookmarks({ limit: 100 });
+        setBookmarkedNews(response.data || []);
+      } catch (err) {
+        console.error('Error refreshing bookmarks:', err);
+      }
     };
 
     // Listen for custom event (same tab)
     window.addEventListener('bookmarksChanged', handleBookmarkChange);
     // Listen for storage event (other tabs)
     window.addEventListener('storage', handleBookmarkChange);
-    // Also check on focus in case bookmarks changed in another tab
-    window.addEventListener('focus', handleBookmarkChange);
 
     return () => {
       window.removeEventListener('bookmarksChanged', handleBookmarkChange);
       window.removeEventListener('storage', handleBookmarkChange);
-      window.removeEventListener('focus', handleBookmarkChange);
     };
   }, []);
 
@@ -73,14 +100,68 @@ function BookmarkNewsPage() {
 
         {/* Content */}
         <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-3 py-4">
-          {bookmarkedNews.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <p className="text-gray-500 text-base">बुकमार्क लोड हो रहे हैं...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 mb-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-gray-500 text-base mb-4">{error}</p>
+              {error.includes('लॉगिन') && (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors"
+                >
+                  लॉगिन करें
+                </button>
+              )}
+            </div>
+          ) : !isAuthenticated ? (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 mb-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+              <p className="text-gray-500 text-base mb-4">बुकमार्क देखने के लिए कृपया लॉगिन करें</p>
+              <button
+                onClick={() => navigate('/login')}
+                className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors"
+              >
+                लॉगिन करें
+              </button>
+            </div>
+          ) : bookmarkedNews.length > 0 ? (
             <div className="space-y-0">
-              {bookmarkedNews.map((news) => (
-                <NewsCard key={news.id} news={news} />
-              ))}
+              {bookmarkedNews.map((news) => {
+                const newsId = news.id || news._id;
+                return <NewsCard key={newsId} news={news} />;
+              })}
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400 mb-3"
                 fill="none"
@@ -102,7 +183,7 @@ function BookmarkNewsPage() {
       </div>
 
       {/* Bottom Navbar */}
-
+      <BottomNavbar />
     </div>
   );
 }

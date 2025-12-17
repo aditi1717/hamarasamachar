@@ -1,142 +1,183 @@
 // Banner management service
-const BANNERS_KEY = 'admin_banners';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Initialize with dummy data if not exists
-function initializeBanners() {
-  const existing = localStorage.getItem(BANNERS_KEY);
-  if (!existing) {
-    const defaultBanners = [
-      {
-        id: 1,
-        title: 'मुख्य बैनर',
-        imageUrl: '/images/banner1.jpg',
-        link: 'https://example.com',
-        position: 'homepage_top',
-        order: 1,
-        status: 'active',
-        target: '_blank',
-        clicks: 0,
-        views: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: 2,
-        title: 'साइडबार बैनर',
-        imageUrl: '/images/banner2.jpg',
-        link: 'https://example.com',
-        position: 'sidebar',
-        order: 1,
-        status: 'active',
-        target: '_self',
-        clicks: 0,
-        views: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(BANNERS_KEY, JSON.stringify(defaultBanners));
-  }
-}
+// Helper function to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+};
 
-// Initialize on load
-initializeBanners();
+// Helper function to transform backend banner to frontend format
+const transformBanner = (backendBanner) => {
+  return {
+    id: backendBanner._id,
+    _id: backendBanner._id,
+    title: backendBanner.title || '',
+    imageUrl: backendBanner.imageUrl || '',
+    videoUrl: backendBanner.videoUrl || '',
+    link: backendBanner.link || '',
+    position: backendBanner.position || 'news_feed',
+    category: backendBanner.category || '',
+    order: backendBanner.order || 0,
+    status: backendBanner.status || 'active',
+    target: backendBanner.target || '_self',
+    clicks: backendBanner.clicks || 0,
+    views: backendBanner.views || 0,
+    createdAt: backendBanner.createdAt,
+    updatedAt: backendBanner.updatedAt
+  };
+};
 
 export const bannerService = {
   // Get all banners
   getAll: async () => {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-    return banners.sort((a, b) => {
-      // Sort by position first
-      if (a.position !== b.position) {
-        return a.position.localeCompare(b.position);
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/banners`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch banners');
       }
-      // For new format with images array, sort by first image's order
-      const aOrder = a.images && a.images.length > 0 ? a.images[0].order : (a.order || 0);
-      const bOrder = b.images && b.images.length > 0 ? b.images[0].order : (b.order || 0);
-      return aOrder - bOrder;
-    });
+      
+      const data = await response.json();
+      return data.data.map(transformBanner);
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+      throw error;
+    }
   },
 
   // Get banner by ID
   getById: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-    return banners.find(banner => banner.id === parseInt(id));
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/banners/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch banner');
+      }
+      
+      const data = await response.json();
+      return transformBanner(data.data);
+    } catch (error) {
+      console.error('Error fetching banner:', error);
+      throw error;
+    }
   },
 
   // Create new banner
-  create: async (bannerData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-
-    const newBanner = {
-      id: Date.now(),
-      ...bannerData,
-      clicks: 0,
-      views: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    banners.push(newBanner);
-    localStorage.setItem(BANNERS_KEY, JSON.stringify(banners));
-    return newBanner;
+  create: async (formData) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/banners`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type for FormData, browser will set it with boundary
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create banner');
+      }
+      
+      const data = await response.json();
+      return transformBanner(data.data);
+    } catch (error) {
+      console.error('Error creating banner:', error);
+      throw error;
+    }
   },
 
   // Update banner
-  update: async (id, bannerData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-    const index = banners.findIndex(banner => banner.id === parseInt(id));
-    
-    if (index === -1) {
-      throw new Error('बैनर नहीं मिला');
+  update: async (id, formData) => {
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/banners/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type for FormData, browser will set it with boundary
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update banner');
+      }
+      
+      const data = await response.json();
+      return transformBanner(data.data);
+    } catch (error) {
+      console.error('Error updating banner:', error);
+      throw error;
     }
-
-    banners[index] = {
-      ...banners[index],
-      ...bannerData,
-      updatedAt: new Date().toISOString()
-    };
-
-    localStorage.setItem(BANNERS_KEY, JSON.stringify(banners));
-    return banners[index];
   },
 
   // Delete banner
   delete: async (id) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-    const filtered = banners.filter(banner => banner.id !== parseInt(id));
-    localStorage.setItem(BANNERS_KEY, JSON.stringify(filtered));
-    return true;
+    try {
+      const token = getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/admin/banners/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete banner');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      throw error;
+    }
   },
 
   // Get banners by position and optionally by category
   getByPosition: async (position, category = null) => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const banners = JSON.parse(localStorage.getItem(BANNERS_KEY) || '[]');
-    return banners
-      .filter(banner => {
-        const positionMatch = banner.position === position && banner.status === 'active';
-        if (!positionMatch) return false;
-        
-        // If category is specified, filter by category
-        // If banner has no category (empty string or undefined), show for all categories
-        // If banner has a category, only show if it matches
-        if (category) {
-          return !banner.category || banner.category === '' || banner.category === category;
+    try {
+      const token = getAuthToken();
+      let url = `${API_BASE_URL}/admin/banners/position/${position}`;
+      if (category) {
+        url += `?category=${encodeURIComponent(category)}`;
+      }
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-        return true;
-      })
-      .sort((a, b) => {
-        // For new format with images array, sort by first image's order
-        const aOrder = a.images && a.images.length > 0 ? a.images[0].order : (a.order || 0);
-        const bOrder = b.images && b.images.length > 0 ? b.images[0].order : (b.order || 0);
-        return aOrder - bOrder;
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch banners by position');
+      }
+      
+      const data = await response.json();
+      return data.data.map(transformBanner);
+    } catch (error) {
+      console.error('Error fetching banners by position:', error);
+      throw error;
+    }
   }
 };
-

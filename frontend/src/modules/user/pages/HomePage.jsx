@@ -7,21 +7,60 @@ import DistrictFilter from '../components/DistrictFilter';
 import NewsCard from '../components/NewsCard';
 import BottomNavbar from '../components/BottomNavbar';
 import Banner from '../components/Banner';
-import { getAllNews, getNewsByCategory } from '../data/dummyNewsData';
-import { CATEGORIES, CATEGORY_SLUGS } from '../constants/categories';
+import { CATEGORY_SLUGS } from '../constants/categories';
 import { DISTRICT_SLUGS } from '../constants/districts';
+import { getAllCategories } from '../services/categoryService';
+import { getNewsByCategory as fetchNewsByCategory } from '../services/newsService';
 
 function HomePage() {
   const navigate = useNavigate();
   const { categorySlug, districtSlug } = useParams();
+  const [categorySlugMap, setCategorySlugMap] = useState(CATEGORY_SLUGS); // Map of category name to slug
+  const [apiCategories, setApiCategories] = useState([]); // Store API categories
 
-  // Get category from URL slug or default to 'ब्रेकिंग'
+  // Load categories from API to build slug map
+  useEffect(() => {
+    const loadCategorySlugs = async () => {
+      try {
+        const categories = await getAllCategories();
+        if (categories && categories.length > 0) {
+          setApiCategories(categories);
+          // Build slug map from API categories
+          const slugMap = {};
+          categories.forEach(cat => {
+            if (cat.name && cat.slug) {
+              slugMap[cat.name] = cat.slug;
+            }
+          });
+          // Merge with constants for fallback
+          setCategorySlugMap({ ...CATEGORY_SLUGS, ...slugMap });
+        }
+      } catch (error) {
+        console.error('Error loading category slugs:', error);
+        // Keep using constants
+      }
+    };
+    loadCategorySlugs();
+  }, []);
+
+  // Get category from URL slug - check API categories first, then fallback
   const getCategoryFromSlug = (slug) => {
-    if (!slug) return 'ब्रेकिंग';
-    const category = Object.keys(CATEGORY_SLUGS).find(
-      key => CATEGORY_SLUGS[key] === slug
+    if (!slug) {
+      // Return first API category or default
+      return apiCategories.length > 0 ? apiCategories[0].name : 'ब्रेकिंग';
+    }
+    
+    // First check API categories
+    const apiCategory = apiCategories.find(cat => cat.slug === slug);
+    if (apiCategory) {
+      return apiCategory.name;
+    }
+    
+    // Fallback to constants
+    const category = Object.keys(categorySlugMap).find(
+      key => categorySlugMap[key] === slug
     );
-    return category || 'ब्रेकिंग';
+    return category || (apiCategories.length > 0 ? apiCategories[0].name : 'ब्रेकिंग');
   };
 
   // Get district from URL slug or default to 'सभी जिले'
@@ -39,7 +78,9 @@ function HomePage() {
   const [selectedDistrict, setSelectedDistrict] = useState(
     getDistrictFromSlug(districtSlug)
   );
-  const [newsData, setNewsData] = useState(getNewsByCategory(selectedCategory));
+  const [newsData, setNewsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Update category from URL when it changes
   useEffect(() => {
@@ -66,27 +107,69 @@ function HomePage() {
     }
   }, []);
 
-  // Update news data when category or district changes
+  // Update news data when category or district changes - using API
   useEffect(() => {
-    if (selectedCategory === 'राजस्थान') {
-      setNewsData(getNewsByCategory(selectedCategory, selectedDistrict));
-    } else {
-      setNewsData(getNewsByCategory(selectedCategory));
-    }
-  }, [selectedCategory, selectedDistrict]);
+    const loadNews = async () => {
+      // Don't load if no category selected or categories haven't been loaded yet (unless using fallback)
+      if (!selectedCategory) {
+        return;
+      }
 
-  const handleCategoryChange = (category) => {
+      // For "ब्रेकिंग", we can load immediately (uses isBreakingNews flag, no category slug needed)
+      // For other categories, wait for categories to load or use fallback slug map
+      if (selectedCategory !== 'ब्रेकिंग' && apiCategories.length === 0 && !categorySlugMap[selectedCategory]) {
+        // Still loading categories, wait a bit
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get category slug from API categories or fallback to constants
+        // For "ब्रेकिंग", slug is not needed (uses isBreakingNews flag)
+        const categorySlug = selectedCategory === 'ब्रेकिंग' 
+          ? null 
+          : (apiCategories.find(cat => cat.name === selectedCategory)?.slug 
+            || categorySlugMap[selectedCategory] 
+            || selectedCategory.toLowerCase().replace(/\s+/g, '-'));
+        
+        // Fetch news using same logic as mock data
+        // Special case: "ब्रेकिंग" uses isBreakingNews flag (not a category)
+        // Special case: राजस्थान can filter by district
+        const news = await fetchNewsByCategory(
+          selectedCategory,  // category name (for logic)
+          categorySlug,      // category slug (for API, null for breaking)
+          selectedDistrict === 'सभी जिले' ? null : selectedDistrict, // district (null if "all")
+          { page: 1, limit: 50 }
+        );
+        
+        setNewsData(news);
+      } catch (err) {
+        console.error('Error loading news:', err);
+        setError(err.message);
+        setNewsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+  }, [selectedCategory, selectedDistrict, apiCategories, categorySlugMap]);
+
+  const handleCategoryChange = (category, slug) => {
     setSelectedCategory(category);
-    // Update URL with category slug
-    const slug = CATEGORY_SLUGS[category] || 'breaking';
+    // Use provided slug from API, or fallback to constants
+    const categorySlug = slug || CATEGORY_SLUGS[category] || category.toLowerCase().replace(/\s+/g, '-');
+    
     if (category === 'राजस्थान') {
       // If switching to राजस्थान, keep current district or default to 'all'
       const districtSlug = selectedDistrict === 'सभी जिले'
         ? 'all'
         : (DISTRICT_SLUGS[selectedDistrict] || 'all');
-      navigate(`/category/${slug}/${districtSlug}`, { replace: true });
+      navigate(`/category/${categorySlug}/${districtSlug}`, { replace: true });
     } else {
-      navigate(`/category/${slug}`, { replace: true });
+      navigate(`/category/${categorySlug}`, { replace: true });
       // Reset district filter when category changes
       setSelectedDistrict('सभी जिले');
     }
@@ -96,7 +179,7 @@ function HomePage() {
     setSelectedDistrict(district);
     // Update URL with district slug if राजस्थान category
     if (selectedCategory === 'राजस्थान') {
-      const categorySlug = CATEGORY_SLUGS['राजस्थान'] || 'rajasthan';
+      const categorySlug = categorySlugMap['राजस्थान'] || CATEGORY_SLUGS['राजस्थान'] || 'rajasthan';
       const districtSlug = district === 'सभी जिले'
         ? 'all'
         : (DISTRICT_SLUGS[district] || 'all');
@@ -114,7 +197,10 @@ function HomePage() {
         <BreakingNewsBanner />
 
         {/* Category Menu */}
-        <CategoryMenu onCategoryChange={handleCategoryChange} />
+        <CategoryMenu 
+          onCategoryChange={handleCategoryChange} 
+          activeCategory={selectedCategory}
+        />
 
         {/* District Filter - Only show for राजस्थान category */}
         {selectedCategory === 'राजस्थान' && (
@@ -127,7 +213,22 @@ function HomePage() {
         {/* News Content */}
         <div className="px-4 sm:px-5 md:px-6 lg:px-8 py-2 sm:py-3 pb-20 sm:pb-24">
           <div className="space-y-0">
-            {newsData.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">समाचार लोड हो रहे हैं...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-500">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  पुनः प्रयास करें
+                </button>
+              </div>
+            ) : newsData.length > 0 ? (
               newsData.map((news, index) => (
                 <div key={news.id}>
                   <NewsCard news={news} />

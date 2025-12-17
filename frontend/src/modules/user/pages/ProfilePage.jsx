@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavbar from '../components/BottomNavbar';
+import { getCurrentUser, deleteAccount } from '../services/authService';
 import './ProfilePage.css';
 
 function ProfilePage() {
   const navigate = useNavigate();
   const [profileData, setProfileData] = useState(null);
   const [mobileNumber, setMobileNumber] = useState('');
+  const [userId, setUserId] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Trigger visibility after component mounts for smooth transition
@@ -18,33 +21,141 @@ function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    // Load profile data from localStorage
-    const savedProfile = localStorage.getItem('userProfile');
-    if (savedProfile) {
-      setProfileData(JSON.parse(savedProfile));
-    }
+    // Load user data from backend first, then fallback to localStorage
+    const loadUserData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('userToken');
+        
+        if (token) {
+          // Try to load from backend
+          const user = await getCurrentUser();
+          if (user) {
+            // Set mobile number from backend
+            if (user.phone) {
+              const formattedPhone = user.phone.startsWith('+') ? user.phone : `+91${user.phone}`;
+              setMobileNumber(formattedPhone);
+              localStorage.setItem('userMobileNumber', formattedPhone);
+            }
 
-    // Load mobile number if available
-    const savedMobile = localStorage.getItem('userMobileNumber');
-    if (savedMobile) {
-      setMobileNumber(savedMobile);
-    }
+            // Set user ID from backend
+            if (user.id) {
+              // Use MongoDB ObjectId (24 chars) - take first 8 chars for display
+              const userIdStr = user.id.toString();
+              const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
+              setUserId(shortId);
+              localStorage.setItem('userId', shortId);
+            } else if (user._id) {
+              // Fallback to _id if id is not present
+              const userIdStr = user._id.toString();
+              const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
+              setUserId(shortId);
+              localStorage.setItem('userId', shortId);
+            }
 
-    // Load selected categories from localStorage
-    const savedCategories = localStorage.getItem('userCategories');
-    if (savedCategories) {
-      setSelectedCategories(JSON.parse(savedCategories));
-    }
+            // Set profile data from backend
+            const backendProfileData = {
+              birthday: user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : null,
+              gender: user.gender ? user.gender.toLowerCase() : null,
+            };
+            setProfileData(backendProfileData);
+            
+            // Also save to localStorage for fallback
+            if (backendProfileData.birthday || backendProfileData.gender) {
+              localStorage.setItem('userProfile', JSON.stringify(backendProfileData));
+            }
+
+            // Set selected categories from backend - check selectedCategories array first
+            if (user.selectedCategories && Array.isArray(user.selectedCategories) && user.selectedCategories.length > 0) {
+              setSelectedCategories(user.selectedCategories);
+              localStorage.setItem('userCategories', JSON.stringify(user.selectedCategories));
+            } else if (user.selectedCategory) {
+              // Fallback to single selectedCategory for backward compatibility
+              setSelectedCategories([user.selectedCategory]);
+              localStorage.setItem('userCategories', JSON.stringify([user.selectedCategory]));
+            }
+            
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data from backend:', error);
+      }
+
+      // Fallback to localStorage
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        setProfileData(JSON.parse(savedProfile));
+      }
+
+      // Load mobile number if available
+      const savedMobile = localStorage.getItem('userMobileNumber');
+      if (savedMobile) {
+        setMobileNumber(savedMobile);
+      } else {
+        // Try to get from userData
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            if (user.phone) {
+              const formattedPhone = user.phone.startsWith('+') ? user.phone : `+91${user.phone}`;
+              setMobileNumber(formattedPhone);
+            }
+          } catch (e) {
+            console.error('Error parsing userData:', e);
+          }
+        }
+      }
+
+      // Load selected categories from localStorage
+      const savedCategories = localStorage.getItem('userCategories');
+      if (savedCategories) {
+        setSelectedCategories(JSON.parse(savedCategories));
+      }
+      
+      setLoading(false);
+    };
+
+    loadUserData();
   }, []);
 
-  const generateUserId = () => {
-    // Generate or retrieve user ID
-    let userId = localStorage.getItem('userId');
-    if (!userId) {
-      userId = 'PI' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      localStorage.setItem('userId', userId);
+  const getDisplayUserId = () => {
+    // Get user ID from state
+    if (userId) {
+      return userId;
     }
-    return userId;
+    
+    // Try to get from localStorage
+    let savedUserId = localStorage.getItem('userId');
+    if (savedUserId) {
+      return savedUserId;
+    }
+    
+    // Try to get from userData
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.id) {
+          // MongoDB ObjectId is 24 chars, take first 8 for display
+          const userIdStr = user.id.toString();
+          const shortId = userIdStr.length > 8 ? userIdStr.substring(0, 8).toUpperCase() : userIdStr.toUpperCase();
+          localStorage.setItem('userId', shortId);
+          setUserId(shortId);
+          return shortId;
+        }
+      } catch (e) {
+        console.error('Error parsing userData:', e);
+      }
+    }
+    
+    // Generate new ID as last resort (only if no backend data available)
+    const newUserId = 'PI' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    localStorage.setItem('userId', newUserId);
+    setUserId(newUserId);
+    return newUserId;
   };
 
   const topMenuItems = [
@@ -67,7 +178,7 @@ function ProfilePage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
         </svg>
       ),
-      action: () => navigate('/category-selection')
+      action: () => navigate('/category-selection', { state: { editMode: true } })
     },
     {
       id: 'about',
@@ -183,24 +294,46 @@ function ProfilePage() {
   ];
 
   const handleEdit = () => {
-    navigate('/profile-setup');
+    // Navigate to profile setup in edit mode
+    navigate('/profile-setup', { state: { editMode: true } });
   };
 
   const handleLogoutConfirm = () => {
+    // Clear all user data
     localStorage.removeItem('userProfile');
     localStorage.removeItem('userMobileNumber');
     localStorage.removeItem('userCategories');
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userId');
     setShowLogoutConfirm(false);
     navigate('/login');
   };
 
-  const handleDeleteConfirm = () => {
-    localStorage.removeItem('userProfile');
-    localStorage.removeItem('userMobileNumber');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userCategories');
-    setShowDeleteConfirm(false);
-    navigate('/login');
+  const handleDeleteConfirm = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      
+      if (token) {
+        // Call backend API to delete account
+        await deleteAccount();
+      } else {
+        // If no token, just clear local data
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('userMobileNumber');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userCategories');
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userData');
+      }
+      
+      setShowDeleteConfirm(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert(error.message || 'खाता हटाने में समस्या हुई। कृपया पुनः प्रयास करें।');
+      setShowDeleteConfirm(false);
+    }
   };
 
   return (
@@ -239,9 +372,9 @@ function ProfilePage() {
                     <span className="text-2xl">👤</span>
                     <div>
                       <p className="text-lg font-bold text-gray-900 leading-tight">
-                        {mobileNumber || 'Guest User'}
+                        {loading ? 'Loading...' : (mobileNumber || 'Guest User')}
                       </p>
-                      <p className="text-xs text-gray-400 font-medium tracking-wide">ID: {generateUserId()}</p>
+                      <p className="text-xs text-gray-400 font-medium tracking-wide">ID: {getDisplayUserId()}</p>
                     </div>
                   </div>
 

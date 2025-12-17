@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { bannerService } from '../../admin/services/bannerService';
+import { getBanners } from '../services/newsService';
 
 function Banner({ position = 'news_feed', category = null }) {
   const [banners, setBanners] = useState([]);
@@ -11,10 +11,13 @@ function Banner({ position = 'news_feed', category = null }) {
 
   const loadBanners = async () => {
     try {
-      const allBanners = await bannerService.getByPosition(position, category);
-      setBanners(allBanners);
+      // Use user endpoint which doesn't require authentication
+      const allBanners = await getBanners(position, category);
+      setBanners(allBanners || []);
     } catch (error) {
       console.error('Error loading banners:', error);
+      // Set empty array on error to show placeholder
+      setBanners([]);
     } finally {
       setLoading(false);
     }
@@ -44,19 +47,37 @@ function Banner({ position = 'news_feed', category = null }) {
 
   // Get banner from service or use placeholder
   let banner = null;
-  let bannerImage = null;
 
   if (banners.length > 0) {
     banner = banners[0];
-    // Handle both old format (imageUrl) and new format (images array)
-    bannerImage = banner.images && banner.images.length > 0 
-      ? banner.images[0].url 
-      : banner.imageUrl;
   }
 
   // Use placeholder if no banner found
-  if (!bannerImage) {
-    bannerImage = getPlaceholderBanner();
+  if (!banner) {
+    return (
+      <div className="w-full my-4 sm:my-5">
+        <div className="w-full max-w-full border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div className="w-full">
+            <img
+              src={getPlaceholderBanner()}
+              alt="Advertisement"
+              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+            />
+          </div>
+          <div className="px-3 sm:px-4 py-2 sm:py-2.5 flex justify-center">
+            <span
+              className="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold tracking-wide shadow-sm inline-block"
+              style={{
+                backgroundColor: '#666666',
+                color: '#FFFFFF'
+              }}
+            >
+              विज्ञापन
+            </span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -64,17 +85,32 @@ function Banner({ position = 'news_feed', category = null }) {
       <div className="w-full max-w-full border border-gray-200 rounded-lg overflow-hidden bg-white">
         <div 
           className="w-full cursor-pointer"
-          onClick={() => banner && handleBannerClick(banner)}
+          onClick={() => handleBannerClick(banner)}
         >
-          <img
-            src={bannerImage}
-            alt={banner?.title || 'Advertisement'}
-            className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
-            onError={(e) => {
-              // If image fails, try another placeholder
-              e.target.src = getPlaceholderBanner();
-            }}
-          />
+          {banner.videoUrl ? (
+            <video
+              src={banner.videoUrl}
+              controls
+              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-contain bg-black"
+              playsInline
+            />
+          ) : banner.imageUrl ? (
+            <img
+              src={banner.imageUrl}
+              alt={banner.title || 'Advertisement'}
+              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+              onError={(e) => {
+                // If image fails, try placeholder
+                e.target.src = getPlaceholderBanner();
+              }}
+            />
+          ) : (
+            <img
+              src={getPlaceholderBanner()}
+              alt="Advertisement"
+              className="w-full h-auto min-h-[200px] sm:min-h-[250px] object-cover"
+            />
+          )}
         </div>
         {/* Category Badge Below Banner */}
         <div className="px-3 sm:px-4 py-2 sm:py-2.5 flex justify-center">

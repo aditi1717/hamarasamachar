@@ -1,125 +1,165 @@
+import { authService } from './authService';
 
-// Mock data for feedbacks
-let feedbacks = [
-    {
-        id: 1,
-        type: 'App Feedback',
-        text: 'Great app! The interface is very smooth.',
-        user: { name: 'Rahul Sharma', contact: 'rahul@example.com' },
-        date: '2025-12-10T10:30:00Z',
-        status: 'New',
-    },
-    {
-        id: 2,
-        type: 'News Feedback',
-        text: 'The news about the election coverage was biased.',
-        user: { name: 'Priya Verma', contact: 'priya@example.com' },
-        date: '2025-12-11T14:15:00Z',
-        status: 'Read',
-    },
-    {
-        id: 3,
-        type: 'App Feedback',
-        text: 'Font size is too small on mobile.',
-        user: null, // Anonymous
-        date: '2025-12-12T09:00:00Z',
-        status: 'Resolved',
-    },
-    {
-        id: 4,
-        type: 'News Feedback',
-        text: 'Please add more local news for Jaipur.',
-        user: { name: 'Amit Singh', contact: 'amit@example.com' },
-        date: '2025-12-13T08:45:00Z',
-        status: 'New',
-    },
-    {
-        id: 5,
-        type: 'App Feedback',
-        text: 'Dark mode is not working properly.',
-        user: { name: 'Suresh Raina', contact: 'suresh@example.com' },
-        date: '2025-12-13T11:20:00Z',
-        status: 'New',
-    },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const matchText = (text, query) => {
-    if (!query) return true;
-    return text.toLowerCase().includes(query.toLowerCase());
-}
+const getAuthHeaders = () => {
+    const token = authService.getToken();
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+};
 
 export const feedbackService = {
     getAllFeedbacks: async (filters = {}) => {
-        // Simulate API call
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                let filtered = [...feedbacks];
+        try {
+            const params = new URLSearchParams();
+            
+            if (filters.type && filters.type !== '') {
+                params.append('type', filters.type);
+            }
+            if (filters.status && filters.status !== '') {
+                params.append('status', filters.status);
+            }
+            if (filters.search) {
+                params.append('search', filters.search);
+            }
+            if (filters.startDate) {
+                params.append('startDate', filters.startDate);
+            }
+            if (filters.endDate) {
+                params.append('endDate', filters.endDate);
+            }
+            params.append('page', '1');
+            params.append('limit', '1000'); // Get all feedbacks
 
-                if (filters.type && filters.type !== 'All') {
-                    filtered = filtered.filter(f => f.type === filters.type);
-                }
+            const response = await fetch(`${API_BASE_URL}/admin/feedback?${params.toString()}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
 
-                if (filters.status && filters.status !== 'All') {
-                    filtered = filtered.filter(f => f.status === filters.status);
-                }
+            const data = await response.json();
 
-                if (filters.search) {
-                    filtered = filtered.filter(f => matchText(f.text, filters.search) || (f.user && matchText(f.user.name, filters.search)));
-                }
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch feedbacks');
+            }
 
-                if (filters.startDate && filters.endDate) {
-                    const start = new Date(filters.startDate).getTime();
-                    const end = new Date(filters.endDate).getTime();
-                    filtered = filtered.filter(f => {
-                        const fDate = new Date(f.date).getTime();
-                        return fDate >= start && fDate <= end;
-                    });
-                }
+            // Transform backend data to frontend format
+            const transformedFeedbacks = data.data.map(feedback => ({
+                id: feedback._id || feedback.id,
+                type: feedback.type,
+                text: feedback.text,
+                user: feedback.user ? {
+                    id: feedback.user.userId || feedback.user._id || feedback.user.id,
+                    userId: feedback.user.userId || feedback.user._id || feedback.user.id,
+                    name: feedback.user.name || 'Anonymous',
+                    contact: feedback.user.phone || 'N/A'
+                } : null,
+                date: feedback.createdAt,
+                status: feedback.status || 'New'
+            }));
 
-                // Sort by date desc
-                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                resolve({ data: filtered, total: filtered.length });
-            }, 500);
-        });
+            return {
+                data: transformedFeedbacks,
+                total: data.total || transformedFeedbacks.length
+            };
+        } catch (error) {
+            console.error('Error fetching feedbacks:', error);
+            throw error;
+        }
     },
 
     getFeedbackById: async (id) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                const feedback = feedbacks.find(f => f.id === parseInt(id));
-                if (feedback) resolve(feedback);
-                else reject(new Error('Feedback not found'));
-            }, 300);
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/feedback/${id}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch feedback');
+            }
+
+            const feedback = data.data;
+            return {
+                id: feedback._id || feedback.id,
+                type: feedback.type,
+                text: feedback.text,
+                user: feedback.user ? {
+                    id: feedback.user.userId || feedback.user._id || feedback.user.id,
+                    userId: feedback.user.userId || feedback.user._id || feedback.user.id,
+                    name: feedback.user.name || 'Anonymous',
+                    contact: feedback.user.phone || 'N/A'
+                } : null,
+                date: feedback.createdAt,
+                status: feedback.status || 'New'
+            };
+        } catch (error) {
+            console.error('Error fetching feedback:', error);
+            throw error;
+        }
     },
 
     updateStatus: async (id, status) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                feedbacks = feedbacks.map(f =>
-                    f.id === id ? { ...f, status } : f
-                );
-                resolve({ success: true });
-            }, 300);
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/feedback/${id}/status`, {
+                method: 'PATCH',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to update feedback status');
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating feedback status:', error);
+            throw error;
+        }
     },
 
     deleteFeedback: async (id) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                feedbacks = feedbacks.filter(f => f.id !== id);
-                resolve({ success: true });
-            }, 300);
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/feedback/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to delete feedback');
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting feedback:', error);
+            throw error;
+        }
     },
 
     getUnreadCount: async () => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const count = feedbacks.filter(f => f.status === 'New').length;
-                resolve(count);
-            }, 300);
-        });
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/feedback/unread-count`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch unread count');
+            }
+
+            return data.count || 0;
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+            throw error;
+        }
     }
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { submitFeedback, getMyFeedbacks } from '../services/feedbackService';
 
 
 function FeedbackPage() {
@@ -11,16 +12,41 @@ function FeedbackPage() {
   const [allFeedbacks, setAllFeedbacks] = useState([]);
 
   useEffect(() => {
-    // Load all feedbacks
-    const feedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
-    setAllFeedbacks(feedbacks);
+    // Load all feedbacks from backend first, then fallback to localStorage
+    const loadFeedbacks = async () => {
+      try {
+        const backendFeedbacks = await getMyFeedbacks();
+        if (backendFeedbacks && backendFeedbacks.length > 0) {
+          // Transform backend format to frontend format
+          const transformedFeedbacks = backendFeedbacks.map(fb => ({
+            type: fb.type === 'App Feedback' ? 'app' : 'news',
+            feedback: fb.text,
+            date: fb.createdAt || fb.date
+          }));
+          setAllFeedbacks(transformedFeedbacks);
+          // Also save to localStorage as backup
+          localStorage.setItem('userFeedbacks', JSON.stringify(transformedFeedbacks));
+        } else {
+          // Fallback to localStorage
+          const feedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
+          setAllFeedbacks(feedbacks);
+        }
+      } catch (error) {
+        console.error('Error loading feedbacks:', error);
+        // Fallback to localStorage
+        const feedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
+        setAllFeedbacks(feedbacks);
+      }
+    };
+
+    loadFeedbacks();
   }, [submitted]);
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedType) {
       alert('कृपया फीडबैक का प्रकार चुनें');
       return;
@@ -30,21 +56,29 @@ function FeedbackPage() {
       return;
     }
 
-    // Save feedback to localStorage
-    const feedbackData = {
-      type: selectedType,
-      feedback: feedback,
-      date: new Date().toISOString()
-    };
+    try {
+      // Submit to backend
+      await submitFeedback(selectedType, feedback.trim());
 
-    const existingFeedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
-    existingFeedbacks.push(feedbackData);
-    localStorage.setItem('userFeedbacks', JSON.stringify(existingFeedbacks));
+      // Also save to localStorage as backup
+      const feedbackData = {
+        type: selectedType,
+        feedback: feedback.trim(),
+        date: new Date().toISOString()
+      };
 
-    setSubmitted(true);
-    setTimeout(() => {
-      navigate(-1);
-    }, 2000);
+      const existingFeedbacks = JSON.parse(localStorage.getItem('userFeedbacks') || '[]');
+      existingFeedbacks.push(feedbackData);
+      localStorage.setItem('userFeedbacks', JSON.stringify(existingFeedbacks));
+
+      setSubmitted(true);
+      setTimeout(() => {
+        navigate(-1);
+      }, 2000);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert(error.message || 'फीडबैक सबमिट करने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    }
   };
 
   if (submitted) {

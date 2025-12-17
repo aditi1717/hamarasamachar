@@ -219,6 +219,7 @@ const ResizableVideoComponent = ({ node, updateAttributes }) => {
                 <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-md rounded-lg flex flex-col gap-1.5 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 shadow-lg border border-white/10">
                     {/* Link Button */}
                     <button
+                        type="button"
                         onClick={() => {
                             const currentLink = node.attrs.href;
                             const url = window.prompt('Link URL (खाली छोड़ने से link हटेगा):', currentLink || '');
@@ -230,7 +231,6 @@ const ResizableVideoComponent = ({ node, updateAttributes }) => {
                             updateAttributes({ href: url || null });
                         }}
                         className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${node.attrs.href ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
-                        type="button"
                         title="Link जोड़ें/हटाएं"
                     >
                         🔗
@@ -311,6 +311,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
 
             {/* Undo/Redo */}
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().undo().run()} 
                 disabled={!editor.can().undo()}
                 className={`p-2 rounded hover:bg-gray-100 ${!editor.can().undo() ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -321,6 +322,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                 </svg>
             </button>
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().redo().run()} 
                 disabled={!editor.can().redo()}
                 className={`p-2 rounded hover:bg-gray-100 ${!editor.can().redo() ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -333,22 +335,23 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
             <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
 
             {/* Main Formatting Actions (Always Visible) */}
-            <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bold') ? 'text-red-600 bg-red-50' : ''}`}><strong>B</strong></button>
-            <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('italic') ? 'text-red-600 bg-red-50' : ''}`}><em>I</em></button>
-            <button onClick={() => editor.chain().focus().toggleUnderline().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('underline') ? 'text-red-600 bg-red-50' : ''}`}><u>U</u></button>
+            <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bold') ? 'text-red-600 bg-red-50' : ''}`}><strong>B</strong></button>
+            <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('italic') ? 'text-red-600 bg-red-50' : ''}`}><em>I</em></button>
+            <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('underline') ? 'text-red-600 bg-red-50' : ''}`}><u>U</u></button>
             <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
 
             {/* Common Blocks */}
-            <button onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-2 rounded text-sm font-bold hover:bg-gray-100 ${editor.isActive('heading', { level: 1 }) ? 'text-red-600 bg-red-50' : ''}`}>H1</button>
-            <button onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-2 rounded text-sm font-bold hover:bg-gray-100 ${editor.isActive('heading', { level: 2 }) ? 'text-red-600 bg-red-50' : ''}`}>H2</button>
+            <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className={`p-2 rounded text-sm font-bold hover:bg-gray-100 ${editor.isActive('heading', { level: 1 }) ? 'text-red-600 bg-red-50' : ''}`}>H1</button>
+            <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className={`p-2 rounded text-sm font-bold hover:bg-gray-100 ${editor.isActive('heading', { level: 2 }) ? 'text-red-600 bg-red-50' : ''}`}>H2</button>
             <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
 
             {/* Lists */}
-            <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bulletList') ? 'text-red-600 bg-red-50' : ''}`}>• List</button>
-            <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('orderedList') ? 'text-red-600 bg-red-50' : ''}`}>1. List</button>
+            <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('bulletList') ? 'text-red-600 bg-red-50' : ''}`}>• List</button>
+            <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('orderedList') ? 'text-red-600 bg-red-50' : ''}`}>1. List</button>
 
             {/* Quote/Blockquote */}
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().toggleBlockquote().run()} 
                 className={`p-2 rounded hover:bg-gray-100 ${editor.isActive('blockquote') ? 'text-red-600 bg-red-50' : ''}`}
                 title="Quote"
@@ -363,6 +366,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
             {/* Table Insert Button - Always visible */}
             <div className="relative" ref={tableMenuRef}>
                 <button 
+                    type="button"
                     onClick={() => setShowTableMenu(!showTableMenu)}
                     className="p-2 rounded hover:bg-gray-100"
                     title="टेबल जोड़ें (Insert Table)"
@@ -380,6 +384,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                             {[2, 3, 4, 5].map(rows => (
                                 [2, 3, 4, 5].map(cols => (
                                     <button
+                                        type="button"
                                         key={`${rows}-${cols}`}
                                         onClick={() => {
                                             editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
@@ -401,6 +406,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
             {isTableActive && (
                 <div className="relative" ref={tableActionsMenuRef}>
                     <button 
+                        type="button"
                         onClick={() => setShowTableActionsMenu(!showTableActionsMenu)}
                         className="p-2 rounded hover:bg-gray-100 text-red-600 bg-red-50"
                         title="टेबल कार्रवाई (Table Actions)"
@@ -419,6 +425,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                 {/* Column Actions */}
                                 <div className="text-xs font-medium text-gray-600 px-2 py-1">कॉलम (Columns)</div>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         editor.chain().focus().addColumnBefore().run();
                                         setShowTableActionsMenu(false);
@@ -428,6 +435,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                     ➕ पहले कॉलम जोड़ें
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         editor.chain().focus().addColumnAfter().run();
                                         setShowTableActionsMenu(false);
@@ -437,6 +445,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                     ➕ बाद में कॉलम जोड़ें
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={async () => {
                                         setShowTableActionsMenu(false);
                                         const confirmed = await showConfirm({
@@ -457,6 +466,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                 {/* Row Actions */}
                                 <div className="text-xs font-medium text-gray-600 px-2 py-1">पंक्ति (Rows)</div>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         editor.chain().focus().addRowBefore().run();
                                         setShowTableActionsMenu(false);
@@ -466,6 +476,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                     ➕ पहले पंक्ति जोड़ें
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         editor.chain().focus().addRowAfter().run();
                                         setShowTableActionsMenu(false);
@@ -475,6 +486,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                     ➕ बाद में पंक्ति जोड़ें
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={async () => {
                                         setShowTableActionsMenu(false);
                                         const confirmed = await showConfirm({
@@ -494,6 +506,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                                 
                                 {/* Delete Table */}
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         if (window.confirm('क्या आप वाकई इस पूरी टेबल को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।')) {
                                             editor.chain().focus().deleteTable().run();
@@ -514,6 +527,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
 
             {/* Text Alignment */}
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().setTextAlign('left').run()} 
                 className={`p-2 rounded hover:bg-gray-100 ${editor.isActive({ textAlign: 'left' }) ? 'text-red-600 bg-red-50' : ''}`}
                 title="Left Align"
@@ -523,6 +537,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                 </svg>
             </button>
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().setTextAlign('center').run()} 
                 className={`p-2 rounded hover:bg-gray-100 ${editor.isActive({ textAlign: 'center' }) ? 'text-red-600 bg-red-50' : ''}`}
                 title="Center Align"
@@ -532,6 +547,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                 </svg>
             </button>
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().setTextAlign('right').run()} 
                 className={`p-2 rounded hover:bg-gray-100 ${editor.isActive({ textAlign: 'right' }) ? 'text-red-600 bg-red-50' : ''}`}
                 title="Right Align"
@@ -541,6 +557,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                 </svg>
             </button>
             <button 
+                type="button"
                 onClick={() => editor.chain().focus().setTextAlign('justify').run()} 
                 className={`p-2 rounded hover:bg-gray-100 ${editor.isActive({ textAlign: 'justify' }) ? 'text-red-600 bg-red-50' : ''}`}
                 title="Justify"
@@ -554,6 +571,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
 
             {/* Link Button for Text */}
             <button 
+                type="button"
                 onClick={() => {
                     const previousUrl = editor.getAttributes('link').href;
                     
@@ -607,6 +625,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
 
             {/* Preview Toggle */}
             <button
+                type="button"
                 onClick={() => setShowPreview(!showPreview)}
                 className={`p-2 rounded hover:bg-gray-100 ${showPreview ? 'text-blue-600 bg-blue-50' : ''}`}
                 title="Preview (प्रिव्यू)"
@@ -638,6 +657,7 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                     title="Text Color"
                 />
                 <button
+                    type="button"
                     onClick={() => editor.chain().focus().unsetColor().run()}
                     className="p-1.5 rounded hover:bg-gray-100 text-xs"
                     title="Reset Color"
@@ -657,7 +677,11 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
 
     const editor = useEditor({
         extensions: [
-            StarterKit,
+            StarterKit.configure({
+                // Exclude Link and Underline from StarterKit since we're adding them separately
+                link: false,
+                underline: false,
+            }),
             Underline,
             CustomImageExtension.configure({ inline: true, allowBase64: true }),
             VideoExtension, // Add Custom Video Extension
@@ -701,11 +725,18 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
             // }),
         ],
         content,
+        // onUpdate: Updates local state only, does NOT save to backend
+        // Content is only saved when admin clicks "अपडेट करें" button
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
         },
         onFocus: () => setIsFocused(true),
-        onBlur: () => setIsFocused(false),
+        onBlur: ({ editor }) => {
+            setIsFocused(false);
+            // Ensure content is captured in local state when editor loses focus
+            // This does NOT save to backend - only updates formData state
+            onChange(editor.getHTML());
+        },
         editorProps: {
             attributes: {
                 class: 'min-h-[300px] p-4 focus:outline-none tiptap-content',
@@ -741,11 +772,14 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
         },
     });
 
-    // Update content if it changes externally
+    // Update content if it changes externally (only on initial load or when content prop changes significantly)
     useEffect(() => {
-        if (editor && content !== editor.getHTML()) {
-            if (editor.isEmpty && content) {
-                editor.commands.setContent(content);
+        if (editor && content !== undefined) {
+            const currentContent = editor.getHTML();
+            // Only update if content is significantly different (to avoid infinite loops)
+            // Update on initial load or when content prop is explicitly changed from parent
+            if (editor.isEmpty || (content && currentContent !== content && content.trim() !== '')) {
+                editor.commands.setContent(content, false); // false = don't add to history
             }
         }
     }, [content, editor]);

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavbar from '../components/BottomNavbar';
+import { getCurrentUser, updateProfile } from '../services/authService';
 
 // Mock Notification Data
 const INITIAL_NOTIFICATIONS = [
@@ -44,6 +45,15 @@ function NotificationPage() {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [notificationSettings, setNotificationSettings] = useState({
+        pushNotifications: true,
+        breakingNews: true,
+        localNews: true,
+        sportsNews: true,
+        entertainmentNews: true
+    });
+    const [loading, setLoading] = useState(false);
 
     const toggleSelectionMode = () => {
         setIsSelectionMode(!isSelectionMode);
@@ -74,6 +84,45 @@ function NotificationPage() {
             setSelectedIds([]);
         } else {
             setSelectedIds(notifications.map(n => n.id));
+        }
+    };
+
+    useEffect(() => {
+        // Load notification settings from backend
+        const loadSettings = async () => {
+            try {
+                const user = await getCurrentUser();
+                if (user && user.notificationSettings) {
+                    setNotificationSettings(user.notificationSettings);
+                }
+            } catch (error) {
+                console.error('Error loading notification settings:', error);
+            }
+        };
+
+        loadSettings();
+    }, []);
+
+    const handleSettingToggle = async (settingKey) => {
+        const newSettings = {
+            ...notificationSettings,
+            [settingKey]: !notificationSettings[settingKey]
+        };
+        setNotificationSettings(newSettings);
+
+        // Save to backend
+        try {
+            setLoading(true);
+            await updateProfile({
+                notificationSettings: newSettings
+            });
+        } catch (error) {
+            console.error('Error saving notification settings:', error);
+            // Revert on error
+            setNotificationSettings(notificationSettings);
+            alert('सेटिंग्स सेव करने में समस्या हुई। कृपया पुनः प्रयास करें।');
+        } finally {
+            setLoading(false);
         }
     };
 

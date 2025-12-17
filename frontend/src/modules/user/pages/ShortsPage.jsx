@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getAllNews } from '../data/dummyNewsData';
+import { getAllNews } from '../services/newsService';
 import logo from '../assets/samachar-logo.png';
 import BottomNavbar from '../components/BottomNavbar';
 
@@ -12,42 +12,72 @@ function ShortsPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef(null);
   const videoRefs = useRef({});
+  const videoNewsRef = useRef([]);
   const [isPlaying, setIsPlaying] = useState({});
   const [disableScroll, setDisableScroll] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Keep ref in sync with videoNews
   useEffect(() => {
-    // Get all video news items
-    const allNews = getAllNews();
-    const videos = allNews.filter(news => news.type === 'video' && news.videoUrl);
-    setVideoNews(videos);
+    videoNewsRef.current = videoNews;
+  }, [videoNews]);
 
-    // If video ID is in URL, find and scroll to that video
-    if (videoIdFromUrl && videos.length > 0) {
-      const videoIndex = videos.findIndex(v => v.id.toString() === videoIdFromUrl);
-      if (videoIndex !== -1) {
-        setCurrentIndex(videoIndex);
-        // Disable scrolling when coming from content
-        setDisableScroll(true);
-        // Scroll to the video after a short delay to ensure DOM is ready
-        setTimeout(() => {
-          const container = containerRef.current;
-          if (container) {
-            const videoElement = container.querySelector(`[data-video-id="${videoIdFromUrl}"]`);
-            if (videoElement) {
-              videoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              // Auto-play the video after scrolling
-              setTimeout(() => {
-                const video = videoRefs.current[videoIdFromUrl];
-                if (video) {
-                  video.play().catch(() => { });
-                  setIsPlaying(prev => ({ ...prev, [videoIdFromUrl]: true }));
+  // Fetch video news from API
+  useEffect(() => {
+    const fetchVideoNews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch all news with a higher limit to get all videos
+        const response = await getAllNews({ limit: 100 });
+        
+        // Filter for videos only (news items with videoUrl)
+        const videos = (response.data || []).filter(news => news.videoUrl && news.videoUrl.trim() !== '');
+        
+        setVideoNews(videos);
+        
+        // If video ID is in URL, find and scroll to that video
+        if (videoIdFromUrl && videos.length > 0) {
+          const videoIndex = videos.findIndex(v => {
+            const videoId = v.id?.toString() || v._id?.toString();
+            return videoId === videoIdFromUrl;
+          });
+          
+          if (videoIndex !== -1) {
+            setCurrentIndex(videoIndex);
+            // Disable scrolling when coming from content
+            setDisableScroll(true);
+            // Scroll to the video after a short delay to ensure DOM is ready
+            setTimeout(() => {
+              const container = containerRef.current;
+              if (container) {
+                const videoElement = container.querySelector(`[data-video-id="${videoIdFromUrl}"]`);
+                if (videoElement) {
+                  videoElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  // Auto-play the video after scrolling
+                  setTimeout(() => {
+                    const video = videoRefs.current[videoIdFromUrl];
+                    if (video) {
+                      video.play().catch(() => { });
+                      setIsPlaying(prev => ({ ...prev, [videoIdFromUrl]: true }));
+                    }
+                  }, 500);
                 }
-              }, 500);
-            }
+              }
+            }, 300);
           }
-        }, 300);
+        }
+      } catch (err) {
+        console.error('Error fetching video news:', err);
+        setError(err.message || 'वीडियो लोड करने में त्रुटि हुई');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    fetchVideoNews();
   }, [videoIdFromUrl]);
 
   // Disable scroll when video is opened from content
@@ -98,13 +128,17 @@ function ShortsPage() {
       });
 
       // Update current index
-      if (closestIndex !== currentIndex) {
-        setCurrentIndex(closestIndex);
-      }
+      setCurrentIndex(prevIndex => {
+        if (prevIndex !== closestIndex) {
+          return closestIndex;
+        }
+        return prevIndex;
+      });
 
       // Play closest video, pause others
       videos.forEach((videoEl, index) => {
-        const videoId = videoNews[index]?.id;
+        // Get video ID from data attribute instead of array
+        const videoId = videoEl.getAttribute('data-video-id');
         if (!videoId) return;
 
         const videoElement = videoRefs.current[videoId];
@@ -143,57 +177,98 @@ function ShortsPage() {
       container.removeEventListener('scroll', throttledHandleScroll);
       if (scrollTimeout) clearTimeout(scrollTimeout);
     };
-  }, [videoNews, currentIndex, disableScroll]);
+  }, [videoNews.length, disableScroll]);
 
-  // Auto-play first video on mount
+  // Auto-play first video on mount (only if not coming from URL)
   useEffect(() => {
-    if (videoNews.length > 0) {
-      const firstVideoId = videoNews[0]?.id;
-      if (firstVideoId) {
-        setTimeout(() => {
-          const videoElement = videoRefs.current[firstVideoId];
-          if (videoElement) {
-            videoElement.play().catch(() => { });
-            setIsPlaying(prev => ({ ...prev, [firstVideoId]: true }));
-          }
-        }, 100);
+    if (videoNews.length === 0 || videoIdFromUrl || disableScroll) return;
+    
+    const firstNews = videoNewsRef.current[0];
+    const firstVideoId = firstNews?.id || firstNews?._id;
+    if (!firstVideoId) return;
+    
+    const timeoutId = setTimeout(() => {
+      const videoElement = videoRefs.current[firstVideoId];
+      if (videoElement) {
+        videoElement.play().catch(() => { });
+        setIsPlaying(prev => ({ ...prev, [firstVideoId]: true }));
       }
-    }
-  }, [videoNews]);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [videoNews.length, videoIdFromUrl, disableScroll]);
 
   const handleShare = (news) => {
+    const newsId = news.id || news._id;
+    const shareUrl = `${window.location.origin}/shorts?video=${newsId}`;
+    
     if (navigator.share) {
       navigator.share({
         title: news.title,
-        text: news.description,
-        url: window.location.origin + `/news/${news.id}`
+        text: news.description || news.subtitleText || '',
+        url: shareUrl
       }).catch(() => { });
     } else {
       // Fallback: Copy to clipboard
-      const url = window.location.origin + `/news/${news.id}`;
-      navigator.clipboard.writeText(url).then(() => {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('लिंक कॉपी हो गया!');
+      }).catch(() => {
+        // Fallback if clipboard API fails
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
         alert('लिंक कॉपी हो गया!');
       });
     }
   };
 
-  const handleDownload = (news) => {
-    // TODO: Implement download functionality
-    if (news.videoUrl) {
-      // For video download
+  const handleDownload = async (news) => {
+    if (!news.videoUrl) {
+      alert('डाउनलोड उपलब्ध नहीं है');
+      return;
+    }
+
+    try {
+      // Fetch the video file
+      const response = await fetch(news.videoUrl);
+      if (!response.ok) {
+        throw new Error('वीडियो डाउनलोड करने में त्रुटि');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = news.videoUrl;
-      link.download = `news_${news.id}.mp4`;
+      const newsId = news.id || news._id;
+      const fileName = news.title 
+        ? `${news.title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}_${newsId}.mp4`
+        : `news_${newsId}.mp4`;
+      
+      link.href = url;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else {
-      alert('डाउनलोड उपलब्ध नहीं है');
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback: Try direct download
+      const link = document.createElement('a');
+      link.href = news.videoUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
   const handleReadNews = (newsId) => {
-    navigate(`/news/${newsId}`);
+    if (newsId) {
+      navigate(`/news/${newsId}`);
+    }
   };
 
   const handleVideoClick = (videoId) => {
@@ -209,10 +284,48 @@ function ShortsPage() {
     }
   };
 
-  if (videoNews.length === 0) {
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-white">वीडियो लोड हो रहे हैं...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">वीडियो लोड हो रहे हैं...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-white text-lg mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors"
+          >
+            पुनः प्रयास करें
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No videos state
+  if (videoNews.length === 0) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-white text-lg mb-4">कोई वीडियो उपलब्ध नहीं है</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors"
+          >
+            होम पर जाएं
+          </button>
+        </div>
       </div>
     );
   }
@@ -254,7 +367,11 @@ function ShortsPage() {
           {/* Right Side - Read News Button */}
           {videoNews[currentIndex] && (
             <button
-              onClick={() => handleReadNews(videoNews[currentIndex].id)}
+              onClick={() => {
+                const currentNews = videoNews[currentIndex];
+                const newsId = currentNews.id || currentNews._id;
+                handleReadNews(newsId);
+              }}
               className="flex items-center gap-1.5 bg-white text-black px-3 py-1.5 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
             >
               <svg
@@ -283,43 +400,77 @@ function ShortsPage() {
         className={`h-full w-full ${disableScroll ? 'overflow-hidden' : 'overflow-y-scroll snap-y snap-mandatory'} scrollbar-hide scroll-smooth`}
         style={{ scrollBehavior: disableScroll ? 'auto' : 'smooth' }}
       >
-        {videoNews.map((news, index) => (
-          <div
-            key={news.id}
-            data-video-id={news.id}
-            className="video-item h-[100dvh] w-full snap-start snap-always relative flex items-center justify-center bg-black pb-[80px]"
-          >
-            {/* Video */}
-            <div className="relative w-full h-full flex items-center justify-center">
-              <video
-                ref={(el) => {
-                  if (el) videoRefs.current[news.id] = el;
-                }}
-                src={news.videoUrl}
-                className="w-full h-full object-contain"
-                loop
-                muted
-                playsInline
-                preload="auto"
-                onClick={() => handleVideoClick(news.id)}
-              />
+        {videoNews.map((news, index) => {
+          const newsId = news.id || news._id;
+          if (!newsId) return null;
+          
+          return (
+            <div
+              key={newsId}
+              data-video-id={newsId}
+              className="video-item h-[100dvh] w-full snap-start snap-always relative flex items-center justify-center bg-black pb-[80px]"
+            >
+              {/* Video */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                <video
+                  ref={(el) => {
+                    if (el) {
+                      videoRefs.current[newsId] = el;
+                      // Ensure video loops properly
+                      el.loop = true;
+                      // Handle video end to restart loop (backup for loop attribute)
+                      const handleEnded = () => {
+                        el.currentTime = 0;
+                        if (!el.paused) {
+                          el.play().catch(() => { });
+                        }
+                      };
+                      el.addEventListener('ended', handleEnded);
+                      
+                      // Cleanup function stored for later removal if needed
+                      el._loopHandler = handleEnded;
+                    } else {
+                      // Cleanup when element is removed
+                      const oldEl = videoRefs.current[newsId];
+                      if (oldEl && oldEl._loopHandler) {
+                        oldEl.removeEventListener('ended', oldEl._loopHandler);
+                      }
+                      delete videoRefs.current[newsId];
+                    }
+                  }}
+                  src={news.videoUrl}
+                  className="w-full h-full object-contain"
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  onClick={() => handleVideoClick(newsId)}
+                  onError={(e) => {
+                    console.error('Video load error:', e);
+                    e.target.style.display = 'none';
+                  }}
+                  onLoadedMetadata={(e) => {
+                    // Ensure loop is set when metadata loads
+                    e.target.loop = true;
+                  }}
+                />
 
-              {/* Play/Pause Overlay */}
-              {!isPlaying[news.id] && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
-                  onClick={() => handleVideoClick(news.id)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-16 w-16 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+                {/* Play/Pause Overlay */}
+                {!isPlaying[newsId] && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+                    onClick={() => handleVideoClick(newsId)}
                   >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-              )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                )}
 
               {/* Category on Left Bottom */}
               <div className="absolute bottom-[45px] left-4 z-40 transition-all duration-300">
@@ -384,7 +535,8 @@ function ShortsPage() {
 
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* Bottom Navbar */}

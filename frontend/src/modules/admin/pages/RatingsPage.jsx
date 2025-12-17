@@ -76,12 +76,13 @@ const RatingsPage = () => {
     };
 
     const handleExportCSV = () => {
-        const headers = ['ID', 'Rating', 'Comment', 'User Name', 'Date', 'Reply'];
+        const headers = ['ID', 'Rating', 'Comment', 'User Phone', 'User ID', 'Date', 'Reply'];
         const csvData = ratings.map(r => [
             r.id,
             r.rating,
             `"${r.comment.replace(/"/g, '""')}"`,
-            r.user ? r.user.name : 'Anonymous',
+            r.user ? r.user.phone || 'N/A' : 'Anonymous',
+            r.user ? r.user.id : 'N/A',
             new Date(r.date).toLocaleDateString(),
             `"${(r.reply || '').replace(/"/g, '""')}"`
         ]);
@@ -125,8 +126,8 @@ const RatingsPage = () => {
             label: 'उपयोगकर्ता',
             render: (val) => val ? (
                 <div className="flex flex-col">
-                    <span className="font-medium text-sm">{val.name}</span>
-                    <span className="text-xs text-gray-400">{val.contact}</span>
+                    <span className="font-medium text-sm">{val.phone || 'N/A'}</span>
+                    <span className="text-xs text-gray-400">ID: {val.id}</span>
                 </div>
             ) : <span className="text-gray-400 italic text-sm">Anonymous</span>
         },
@@ -329,8 +330,8 @@ const RatingsPage = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm text-gray-500">उपयोगकर्ता</p>
-                                        <p className="font-semibold">{selectedRating.user ? selectedRating.user.name : 'Guest'}</p>
-                                        {selectedRating.user && <p className="text-blue-600 text-sm">{selectedRating.user.contact}</p>}
+                                        <p className="font-semibold">{selectedRating.user ? selectedRating.user.phone || 'N/A' : 'Guest'}</p>
+                                        {selectedRating.user && <p className="text-blue-600 text-sm">ID: {selectedRating.user.id}</p>}
                                     </div>
                                 </div>
 

@@ -4,14 +4,21 @@ import { categoryService } from '../services/categoryService';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import Form from '../components/Form';
+import { useToast } from '../hooks/useToast';
+import { useConfirm } from '../hooks/useConfirm';
+import Toast from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function CategoryFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
+  const { toast, showToast, hideToast } = useToast();
+  const { confirmDialog, showConfirm } = useConfirm();
 
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     icon: '',
     color: '#E21E26',
     order: 1,
@@ -20,7 +27,6 @@ function CategoryFormPage() {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     if (isEdit) {
@@ -38,6 +44,7 @@ function CategoryFormPage() {
       if (category) {
         setFormData({
           name: category.name || '',
+          description: category.description || '',
           icon: category.icon || '',
           color: category.color || '#E21E26',
           order: category.order || 1,
@@ -45,7 +52,8 @@ function CategoryFormPage() {
         });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'श्रेणी लोड करने में विफल' });
+      showToast(error.message || 'श्रेणी लोड करने में विफल', 'error');
+      console.error('Error loading category:', error);
     } finally {
       setLoading(false);
     }
@@ -88,10 +96,9 @@ function CategoryFormPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: '', text: '' });
 
     if (!validateForm()) {
-      setMessage({ type: 'error', text: 'कृपया सभी आवश्यक फ़ील्ड भरें' });
+      showToast('कृपया सभी आवश्यक फ़ील्ड भरें', 'error');
       return;
     }
 
@@ -99,36 +106,43 @@ function CategoryFormPage() {
       setLoading(true);
       if (isEdit) {
         await categoryService.update(id, formData);
-        setMessage({ type: 'success', text: 'श्रेणी सफलतापूर्वक अपडेट हो गई' });
+        showToast('श्रेणी सफलतापूर्वक अपडेट हो गई', 'success');
       } else {
         await categoryService.create(formData);
-        setMessage({ type: 'success', text: 'श्रेणी सफलतापूर्वक बनाई गई' });
+        showToast('श्रेणी सफलतापूर्वक बनाई गई', 'success');
       }
 
       setTimeout(() => {
         navigate('/admin/categories');
       }, 1500);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'श्रेणी सहेजने में विफल' });
+      showToast(error.message || 'श्रेणी सहेजने में विफल', 'error');
+      console.error('Error saving category:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('क्या आप इस श्रेणी को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।')) {
+    const confirmed = await showConfirm({
+      message: 'क्या आप इस श्रेणी को हटाना चाहते हैं? यह कार्रवाई पूर्ववत नहीं की जा सकती।',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
     try {
       setLoading(true);
       await categoryService.delete(id);
-      setMessage({ type: 'success', text: 'श्रेणी सफलतापूर्वक हटाई गई' });
+      showToast('श्रेणी सफलतापूर्वक हटाई गई', 'success');
       setTimeout(() => {
         navigate('/admin/categories');
       }, 1500);
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'श्रेणी हटाने में विफल' });
+      showToast(error.message || 'श्रेणी हटाने में विफल', 'error');
+      console.error('Error deleting category:', error);
       setLoading(false);
     }
   };
@@ -150,24 +164,18 @@ function CategoryFormPage() {
 
   return (
     <ProtectedRoute>
+      {toast && <Toast message={toast.message} type={toast.type} duration={toast.duration} onClose={hideToast} />}
+      {confirmDialog && (
+        <ConfirmDialog
+          isOpen={!!confirmDialog}
+          message={confirmDialog.message}
+          type={confirmDialog.type}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={confirmDialog.onCancel}
+        />
+      )}
       <Layout title={isEdit ? 'श्रेणी संपादित करें' : 'नई श्रेणी जोड़ें'}>
         <main className="flex-1 overflow-y-auto mx-2 sm:mx-3 md:mx-4 my-2 sm:my-3 md:my-4 animate-fade-in">
-          {/* Message */}
-          {message.text && (
-            <div
-              className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg ${message.type === 'success'
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
-                }`}
-            >
-              <p
-                className={`text-xs sm:text-sm ${message.type === 'success' ? 'text-green-800' : 'text-red-800'
-                  }`}
-              >
-                {message.text}
-              </p>
-            </div>
-          )}
 
           {/* Form */}
           <div className="w-full">
@@ -180,6 +188,17 @@ function CategoryFormPage() {
                 placeholder="उदाहरण: ब्रेकिंग न्यूज़"
                 required
                 error={errors.name}
+                disabled={loading}
+              />
+
+              <Form.Field
+                label="विवरण (Description)"
+                name="description"
+                type="textarea"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="श्रेणी का संक्षिप्त विवरण..."
+                rows={3}
                 disabled={loading}
               />
 
@@ -232,9 +251,16 @@ function CategoryFormPage() {
               </div>
 
               <Form.Actions>
-                <Form.Button type="submit" variant="primary" loading={loading}>
-                  {isEdit ? 'अपडेट करें' : 'सहेजें'}
-                </Form.Button>
+                {isEdit && (
+                  <Form.Button
+                    type="button"
+                    variant="danger"
+                    onClick={handleDelete}
+                    disabled={loading}
+                  >
+                    हटाएं
+                  </Form.Button>
+                )}
                 <Form.Button
                   type="button"
                   variant="secondary"
@@ -242,6 +268,9 @@ function CategoryFormPage() {
                   disabled={loading}
                 >
                   रद्द करें
+                </Form.Button>
+                <Form.Button type="submit" variant="primary" loading={loading}>
+                  {isEdit ? 'अपडेट करें' : 'सहेजें'}
                 </Form.Button>
               </Form.Actions>
             </Form>

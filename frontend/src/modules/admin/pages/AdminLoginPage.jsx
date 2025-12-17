@@ -1,18 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { COLORS } from '../constants/colors';
+import { authService } from '../services/authService';
 import logo from '../assets/samachar-logo.png';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
+  
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState(1); // 1: email, 2: otp+password
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordOTP, setForgotPasswordOTP] = useState('');
+  const [forgotPasswordNewPassword, setForgotPasswordNewPassword] = useState('');
+  const [forgotPasswordConfirmPassword, setForgotPasswordConfirmPassword] = useState('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordError, setForgotPasswordError] = useState('');
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState('');
+
+  // Show loading while auth context initializes
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E21E26]/5 via-white to-[#E21E26]/5">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E21E26] mx-auto mb-4"></div>
+          <p className="text-gray-600">लोड हो रहा है...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,13 +51,98 @@ function AdminLoginPage() {
     setLoading(true);
 
     try {
+      // Use AuthContext login method to update state properly
       await login(usernameOrEmail, password, rememberMe);
-      navigate('/admin/dashboard');
+      // Navigate to dashboard - AuthContext state is now updated
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'गलत क्रेडेंशियल्स। कृपया पुनः प्रयास करें।');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPasswordClick = () => {
+    setShowForgotPassword(true);
+    setForgotPasswordStep(1);
+    setForgotPasswordEmail('');
+    setForgotPasswordOTP('');
+    setForgotPasswordNewPassword('');
+    setForgotPasswordConfirmPassword('');
+    setForgotPasswordError('');
+    setForgotPasswordSuccess('');
+  };
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    setForgotPasswordError('');
+    setForgotPasswordSuccess('');
+    
+    if (!forgotPasswordEmail) {
+      setForgotPasswordError('कृपया ईमेल दर्ज करें');
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      await authService.forgotPassword(forgotPasswordEmail);
+      setForgotPasswordSuccess('OTP आपके ईमेल पर भेज दिया गया है');
+      setForgotPasswordStep(2);
+    } catch (err) {
+      setForgotPasswordError(err.message || 'OTP भेजने में त्रुटि हुई');
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setForgotPasswordError('');
+    setForgotPasswordSuccess('');
+
+    if (!forgotPasswordOTP || !forgotPasswordNewPassword || !forgotPasswordConfirmPassword) {
+      setForgotPasswordError('कृपया सभी फ़ील्ड भरें');
+      return;
+    }
+
+    if (forgotPasswordNewPassword.length < 6) {
+      setForgotPasswordError('पासवर्ड कम से कम 6 अक्षर का होना चाहिए');
+      return;
+    }
+
+    if (forgotPasswordNewPassword !== forgotPasswordConfirmPassword) {
+      setForgotPasswordError('पासवर्ड मेल नहीं खाते');
+      return;
+    }
+
+    setForgotPasswordLoading(true);
+    try {
+      await authService.resetPassword(forgotPasswordEmail, forgotPasswordOTP, forgotPasswordNewPassword);
+      setForgotPasswordSuccess('पासवर्ड सफलतापूर्वक रीसेट हो गया है');
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotPasswordStep(1);
+        setForgotPasswordEmail('');
+        setForgotPasswordOTP('');
+        setForgotPasswordNewPassword('');
+        setForgotPasswordConfirmPassword('');
+      }, 2000);
+    } catch (err) {
+      setForgotPasswordError(err.message || 'पासवर्ड रीसेट करने में त्रुटि हुई');
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const closeForgotPasswordModal = () => {
+    setShowForgotPassword(false);
+    setForgotPasswordStep(1);
+    setForgotPasswordEmail('');
+    setForgotPasswordOTP('');
+    setForgotPasswordNewPassword('');
+    setForgotPasswordConfirmPassword('');
+    setForgotPasswordError('');
+    setForgotPasswordSuccess('');
   };
 
   return (
@@ -134,10 +250,7 @@ function AdminLoginPage() {
               </label>
               <button
                 type="button"
-                onClick={() => {
-                  // TODO: Implement forgot password
-                  alert('पासवर्ड भूल गए सुविधा जल्द ही आ रही है');
-                }}
+                onClick={handleForgotPasswordClick}
                 className="text-xs sm:text-sm font-medium text-[#E21E26] hover:text-[#C21A20] hover:underline transition-colors"
                 disabled={loading}
               >
@@ -174,6 +287,172 @@ function AdminLoginPage() {
           <p>© 2024 हमारा समाचार. All rights reserved.</p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 sm:p-6 relative animate-fade-in">
+            {/* Close Button */}
+            <button
+              onClick={closeForgotPasswordModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              disabled={forgotPasswordLoading}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal Header */}
+            <div className="mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">पासवर्ड भूल गए?</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {forgotPasswordStep === 1 
+                  ? 'कृपया अपना ईमेल दर्ज करें' 
+                  : 'कृपया OTP और नया पासवर्ड दर्ज करें'}
+              </p>
+            </div>
+
+            {/* Success Message */}
+            {forgotPasswordSuccess && (
+              <div className="mb-4 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200">
+                {forgotPasswordSuccess}
+              </div>
+            )}
+
+            {/* Error Message */}
+            {forgotPasswordError && (
+              <div className="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
+                {forgotPasswordError}
+              </div>
+            )}
+
+            {/* Step 1: Email Input */}
+            {forgotPasswordStep === 1 && (
+              <form onSubmit={handleSendOTP} className="space-y-4">
+                <div>
+                  <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    ईमेल
+                  </label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    placeholder="अपना ईमेल दर्ज करें"
+                    required
+                    className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all"
+                    disabled={forgotPasswordLoading}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={closeForgotPasswordModal}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    disabled={forgotPasswordLoading}
+                  >
+                    रद्द करें
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotPasswordLoading || !forgotPasswordEmail}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all ${
+                      forgotPasswordLoading || !forgotPasswordEmail
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] hover:shadow-lg'
+                    }`}
+                  >
+                    {forgotPasswordLoading ? 'भेज रहे हैं...' : 'OTP भेजें'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 2: OTP and New Password */}
+            {forgotPasswordStep === 2 && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div>
+                  <label htmlFor="forgot-otp" className="block text-sm font-medium text-gray-700 mb-1">
+                    OTP
+                  </label>
+                  <input
+                    id="forgot-otp"
+                    type="text"
+                    value={forgotPasswordOTP}
+                    onChange={(e) => setForgotPasswordOTP(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="6 अंकों का OTP दर्ज करें"
+                    required
+                    maxLength={6}
+                    className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all text-center text-lg tracking-widest"
+                    disabled={forgotPasswordLoading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="forgot-new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    नया पासवर्ड
+                  </label>
+                  <input
+                    id="forgot-new-password"
+                    type="password"
+                    value={forgotPasswordNewPassword}
+                    onChange={(e) => setForgotPasswordNewPassword(e.target.value)}
+                    placeholder="नया पासवर्ड दर्ज करें (कम से कम 6 अक्षर)"
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all"
+                    disabled={forgotPasswordLoading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="forgot-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    पासवर्ड की पुष्टि करें
+                  </label>
+                  <input
+                    id="forgot-confirm-password"
+                    type="password"
+                    value={forgotPasswordConfirmPassword}
+                    onChange={(e) => setForgotPasswordConfirmPassword(e.target.value)}
+                    placeholder="पासवर्ड की पुष्टि करें"
+                    required
+                    minLength={6}
+                    className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E21E26]/20 focus:border-[#E21E26] transition-all"
+                    disabled={forgotPasswordLoading}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotPasswordStep(1);
+                      setForgotPasswordOTP('');
+                      setForgotPasswordNewPassword('');
+                      setForgotPasswordConfirmPassword('');
+                      setForgotPasswordError('');
+                      setForgotPasswordSuccess('');
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    disabled={forgotPasswordLoading}
+                  >
+                    वापस
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotPasswordLoading || !forgotPasswordOTP || !forgotPasswordNewPassword || !forgotPasswordConfirmPassword}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all ${
+                      forgotPasswordLoading || !forgotPasswordOTP || !forgotPasswordNewPassword || !forgotPasswordConfirmPassword
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-[#E21E26] to-[#C21A20] hover:shadow-lg'
+                    }`}
+                  >
+                    {forgotPasswordLoading ? 'रीसेट हो रहा है...' : 'पासवर्ड रीसेट करें'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
