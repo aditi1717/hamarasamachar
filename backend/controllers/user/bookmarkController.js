@@ -25,11 +25,31 @@ export const getBookmarks = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
+    // Filter out bookmarks with null news (news that may have been deleted)
+    // and clean up orphaned bookmarks
+    const validBookmarks = [];
+    const orphanedBookmarkIds = [];
+    
+    for (const bookmark of bookmarks) {
+      if (bookmark.news && bookmark.news !== null) {
+        validBookmarks.push(bookmark.news);
+      } else {
+        // Mark for deletion if news is null
+        orphanedBookmarkIds.push(bookmark._id);
+      }
+    }
+
+    // Clean up orphaned bookmarks in background (don't await)
+    if (orphanedBookmarkIds.length > 0) {
+      Bookmark.deleteMany({ _id: { $in: orphanedBookmarkIds } })
+        .catch(err => console.error('Error cleaning up orphaned bookmarks:', err));
+    }
+
     const total = await Bookmark.countDocuments({ user: req.user._id });
 
     res.json({
       success: true,
-      data: bookmarks.map(b => b.news),
+      data: validBookmarks,
       total,
       page: parseInt(page),
       limit: parseInt(limit)

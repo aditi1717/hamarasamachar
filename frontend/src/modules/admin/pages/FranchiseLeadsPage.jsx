@@ -8,6 +8,7 @@ import { COLORS } from '../constants/colors';
 import {
   getLeads,
   updateLeadStatus,
+  getLeadStats,
 } from '../../shared/services/franchiseLeadService';
 
 const statusStyles = {
@@ -30,21 +31,54 @@ function formatDate(dateString) {
 function FranchiseLeadsPage() {
   const { toast, showToast, hideToast } = useToast();
   const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, new: 0, contacted: 0, closed: 0 });
 
   useEffect(() => {
-    setLeads(getLeads());
+    fetchLeads();
+    fetchStats();
   }, []);
 
-  const handleStatusChange = (leadId, status) => {
-    const updated = updateLeadStatus(leadId, status);
-    setLeads(updated);
-    const label =
-      status === 'closed'
-        ? 'बंद किया गया'
-        : status === 'contacted'
-          ? 'संपर्क किया गया'
-          : 'नया';
-    showToast(`लीड ${label}`, 'success');
+  const fetchLeads = async () => {
+    try {
+      setLoading(true);
+      const leadsData = await getLeads();
+      setLeads(leadsData);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+      showToast('लीड्स लोड करने में त्रुटि हुई', 'error');
+      setLeads([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const statsData = await getLeadStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleStatusChange = async (leadId, status) => {
+    try {
+      await updateLeadStatus(leadId, status);
+      // Refresh leads and stats after update
+      await fetchLeads();
+      await fetchStats();
+      const label =
+        status === 'closed'
+          ? 'बंद किया गया'
+          : status === 'contacted'
+            ? 'संपर्क किया गया'
+            : 'नया';
+      showToast(`लीड ${label}`, 'success');
+    } catch (error) {
+      console.error('Error updating lead status:', error);
+      showToast('लीड स्थिति अपडेट करने में त्रुटि हुई', 'error');
+    }
   };
 
   const columns = [
@@ -116,12 +150,12 @@ function FranchiseLeadsPage() {
           <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 mb-1">कुल लीड्स</p>
-              <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-gray-500 mb-1">स्थिति के अनुसार</p>
               <p className="text-sm text-gray-700">
-                नया: {leads.filter((l) => l.status === 'new').length} · संपर्क: {leads.filter((l) => l.status === 'contacted').length} · बंद: {leads.filter((l) => l.status === 'closed').length}
+                नया: {stats.new} · संपर्क: {stats.contacted} · बंद: {stats.closed}
               </p>
             </div>
           </div>
@@ -132,7 +166,8 @@ function FranchiseLeadsPage() {
             sortable
             searchable
             actions={actions}
-            emptyMessage="अभी कोई लीड नहीं है"
+            emptyMessage={loading ? 'लीड्स लोड हो रहे हैं...' : 'अभी कोई लीड नहीं है'}
+            loading={loading}
             className="border border-gray-100"
           />
         </div>

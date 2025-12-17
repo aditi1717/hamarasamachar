@@ -26,23 +26,31 @@ function FranchisePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const { name, phone, address } = formData;
     if (!name.trim() || !phone.trim() || !address.trim()) {
       setSubmitMessage('कृपया सभी फ़ील्ड भरें');
       return;
     }
-    addLead({
-      name: name.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      source: 'franchise_page',
-    });
-    setSubmitMessage('अनुरोध प्राप्त हुआ! टीम आपसे शीघ्र संपर्क करेगी।');
-    // Reset fields after a short acknowledgement
-    setFormData({ name: '', phone: '', address: '' });
-    setTimeout(() => setSubmitMessage(''), 4000);
+
+    try {
+      setSubmitMessage('भेजा जा रहा है...');
+      await addLead({
+        name: name.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        source: 'franchise_page',
+      });
+      setSubmitMessage('अनुरोध प्राप्त हुआ! टीम आपसे शीघ्र संपर्क करेगी।');
+      // Reset fields after a short acknowledgement
+      setFormData({ name: '', phone: '', address: '' });
+      setTimeout(() => setSubmitMessage(''), 4000);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitMessage('त्रुटि हुई। कृपया पुनः प्रयास करें।');
+      setTimeout(() => setSubmitMessage(''), 4000);
+    }
   };
 
   return (
