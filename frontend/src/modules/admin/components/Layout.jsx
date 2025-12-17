@@ -256,6 +256,30 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>फीडबैक</span>
           </Link>
           <Link
+            to="/admin/franchise-leads"
+            onClick={handleNavClick}
+            className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/franchise-leads') ? `${COLORS.header.bg}15` : 'transparent',
+              color: location.pathname.startsWith('/admin/franchise-leads') ? COLORS.header.bg : '#4B5563'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/franchise-leads')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/franchise-leads')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm6 8a6 6 0 00-12 0h12zM6 14a4 4 0 110-8 4 4 0 010 8zm6 6a6 6 0 00-6-6H0a6 6 0 006 6h6z" />
+            </svg>
+            <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>फ्रेंचाइजी लीड्स</span>
+          </Link>
+          <Link
             to="/admin/ratings"
             onClick={handleNavClick}
             className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"

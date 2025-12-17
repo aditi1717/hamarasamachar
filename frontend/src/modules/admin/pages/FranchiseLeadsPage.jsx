@@ -1,0 +1,155 @@
+import { useEffect, useState } from 'react';
+import ProtectedRoute from '../components/ProtectedRoute';
+import Layout from '../components/Layout';
+import Table from '../components/Table';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
+import { COLORS } from '../constants/colors';
+import {
+  getLeads,
+  updateLeadStatus,
+} from '../../shared/services/franchiseLeadService';
+
+const statusStyles = {
+  new: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+  contacted: 'bg-blue-100 text-blue-700 border border-blue-200',
+  closed: 'bg-green-100 text-green-700 border border-green-200',
+};
+
+function formatDate(dateString) {
+  try {
+    return new Date(dateString).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  } catch {
+    return dateString || '-';
+  }
+}
+
+function FranchiseLeadsPage() {
+  const { toast, showToast, hideToast } = useToast();
+  const [leads, setLeads] = useState([]);
+
+  useEffect(() => {
+    setLeads(getLeads());
+  }, []);
+
+  const handleStatusChange = (leadId, status) => {
+    const updated = updateLeadStatus(leadId, status);
+    setLeads(updated);
+    const label =
+      status === 'closed'
+        ? 'बंद किया गया'
+        : status === 'contacted'
+          ? 'संपर्क किया गया'
+          : 'नया';
+    showToast(`लीड ${label}`, 'success');
+  };
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'नाम',
+      sortable: true,
+      render: (value) => (
+        <p className="font-semibold text-gray-900">{value}</p>
+      ),
+    },
+    {
+      key: 'phone',
+      label: 'मोबाइल',
+      sortable: true,
+      render: (value) => (
+        <a
+          href={`tel:${value}`}
+          className="text-[#E21E26] hover:text-[#c91b22] font-medium"
+        >
+          {value}
+        </a>
+      ),
+    },
+    {
+      key: 'address',
+      label: 'पता / जिला / तहसील',
+      render: (value) => <span className="text-gray-800">{value}</span>,
+    },
+  ];
+
+  const actions = [
+    {
+      label: 'संपर्क किया',
+      variant: 'secondary',
+      onClick: (row) => handleStatusChange(row.id, 'contacted'),
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      ),
+    },
+    {
+      label: 'बंद करें',
+      variant: 'danger',
+      onClick: (row) => handleStatusChange(row.id, 'closed'),
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <ProtectedRoute>
+      <Layout title="फ्रेंचाइजी लीड्स">
+        <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
+          <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">कुल लीड्स</p>
+              <p className="text-2xl font-bold text-gray-900">{leads.length}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500 mb-1">स्थिति के अनुसार</p>
+              <p className="text-sm text-gray-700">
+                नया: {leads.filter((l) => l.status === 'new').length} · संपर्क: {leads.filter((l) => l.status === 'contacted').length} · बंद: {leads.filter((l) => l.status === 'closed').length}
+              </p>
+            </div>
+          </div>
+
+          <Table
+            columns={columns}
+            data={leads}
+            sortable
+            searchable
+            actions={actions}
+            emptyMessage="अभी कोई लीड नहीं है"
+            className="border border-gray-100"
+          />
+        </div>
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            duration={toast.duration}
+            onClose={hideToast}
+          />
+        )}
+      </Layout>
+    </ProtectedRoute>
+  );
+}
+
+export default FranchiseLeadsPage;
+
+
