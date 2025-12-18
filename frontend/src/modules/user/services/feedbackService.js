@@ -51,7 +51,6 @@ export const getMyFeedbacks = async () => {
       return [];
     }
 
-    // Note: This endpoint may not exist yet, but we'll prepare for it
     const response = await fetch(`${API_BASE_URL}/user/feedback/me`, {
       method: 'GET',
       headers: {
@@ -59,11 +58,6 @@ export const getMyFeedbacks = async () => {
         'Authorization': `Bearer ${token}`
       },
     });
-
-    if (response.status === 404) {
-      // Endpoint doesn't exist yet, return empty array
-      return [];
-    }
 
     const data = await response.json();
 
@@ -77,6 +71,9 @@ export const getMyFeedbacks = async () => {
     return [];
   }
 };
+
+
+
 
 
 

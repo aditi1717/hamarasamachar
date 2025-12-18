@@ -604,42 +604,46 @@ function NewsDetailPage() {
 
           {/* Content Sections - Show first section, then blur rest if not logged in */}
           <div className="space-y-4 sm:space-y-5">
-            {/* Show first paragraph without blur */}
-            {contentSections.slice(0, !isLoggedIn ? 1 : contentSections.length).map((section, index) => (
-              <ContentSection
-                key={index}
-                section={section}
-                onShare={handleShare}
-                newsId={news.id}
-              />
-            ))}
-
-            {/* Show remaining content with blur if not logged in */}
-            {!isLoggedIn && contentSections.length > 1 && (
-              <div
-                className="content-sections-container space-y-4 sm:space-y-5 relative blur-md overflow-hidden"
-                style={{ maxHeight: '150px', pointerEvents: 'none', touchAction: 'none' }}
-              >
-                {contentSections.slice(1).map((section, index) => (
+            {isLoggedIn ? (
+              /* Show all content if logged in */
+              contentSections.map((section, index) => (
+                <ContentSection
+                  key={index}
+                  section={section}
+                  onShare={handleShare}
+                  newsId={news.id}
+                />
+              ))
+            ) : (
+              <>
+                {/* Show first paragraph without blur */}
+                {contentSections.slice(0, 1).map((section, index) => (
                   <ContentSection
-                    key={index + 1}
+                    key={index}
                     section={section}
                     onShare={handleShare}
                     newsId={news.id}
                   />
                 ))}
-              </div>
-            )}
 
-            {/* Show all content if logged in */}
-            {isLoggedIn && contentSections.slice(1).map((section, index) => (
-              <ContentSection
-                key={index + 1}
-                section={section}
-                onShare={handleShare}
-                newsId={news.id}
-              />
-            ))}
+                {/* Show remaining content with blur if not logged in */}
+                {contentSections.length > 1 && (
+                  <div
+                    className="content-sections-container space-y-4 sm:space-y-5 relative blur-md overflow-hidden"
+                    style={{ maxHeight: '150px', pointerEvents: 'none', touchAction: 'none' }}
+                  >
+                    {contentSections.slice(1).map((section, index) => (
+                      <ContentSection
+                        key={index + 1}
+                        section={section}
+                        onShare={handleShare}
+                        newsId={news.id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Lock Section - Show if not logged in */}
             {!isLoggedIn && (

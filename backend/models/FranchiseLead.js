@@ -29,6 +29,18 @@ const franchiseLeadSchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  qualification: {
+    type: String,
+    trim: true
+  },
+  age: {
+    type: String,
+    trim: true
+  },
+  additionalInfo: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

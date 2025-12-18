@@ -25,9 +25,8 @@ function JournalistTrainingLeadsPage() {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const allLeads = await getLeads();
-      // Filter only training leads
-      const trainingLeads = allLeads.filter(lead => lead.source === 'journalist_training_page');
+      // Filter by source using API
+      const trainingLeads = await getLeads({ source: 'journalist_training_page' });
       setLeads(trainingLeads);
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -40,14 +39,12 @@ function JournalistTrainingLeadsPage() {
 
   const fetchStats = async () => {
     try {
-      const allLeads = await getLeads();
-      const trainingLeads = allLeads.filter(lead => lead.source === 'journalist_training_page');
-      
+      const statsData = await getLeadStats({ source: 'journalist_training_page' });
       setStats({
-        total: trainingLeads.length,
-        new: trainingLeads.filter(l => l.status === 'new' || !l.status).length,
-        contacted: trainingLeads.filter(l => l.status === 'contacted').length,
-        closed: trainingLeads.filter(l => l.status === 'closed').length
+        total: statsData.total || 0,
+        new: statsData.new || 0,
+        contacted: statsData.contacted || 0,
+        closed: statsData.closed || 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -122,7 +119,7 @@ function JournalistTrainingLeadsPage() {
     {
       label: 'संपर्क किया',
       variant: 'secondary',
-      onClick: (row) => handleStatusChange(row.id, 'contacted'),
+      onClick: (row) => handleStatusChange(row._id || row.id, 'contacted'),
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -137,7 +134,7 @@ function JournalistTrainingLeadsPage() {
     {
       label: 'बंद करें',
       variant: 'danger',
-      onClick: (row) => handleStatusChange(row.id, 'closed'),
+      onClick: (row) => handleStatusChange(row._id || row.id, 'closed'),
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
