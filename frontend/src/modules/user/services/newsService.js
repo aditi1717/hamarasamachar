@@ -67,12 +67,17 @@ export const getNewsByCategory = async (categoryName, categorySlug, district = n
     const { page = 1, limit = 50 } = options;
     const params = new URLSearchParams();
     
-    // Special handling for "ब्रेकिंग" - use isBreakingNews flag (same logic as mock data)
-    if (categoryName === 'ब्रेकिंग') {
+    // Special handling for "ब्रेकिंग" or "ब्रेकिंग न्यूज़" - use isBreakingNews flag (same logic as mock data)
+    // Handle both "ब्रेकिंग" and "ब्रेकिंग न्यूज़" as breaking news
+    if (categoryName === 'ब्रेकिंग' || categoryName === 'ब्रेकिंग न्यूज़' || categorySlug === 'breaking' || categorySlug === 'breaking-news') {
       params.append('isBreakingNews', 'true');
     } else if (categorySlug) {
       // Use slug for API call (regular category filtering)
       params.append('category', categorySlug);
+    } else if (categoryName && categoryName !== 'ब्रेकिंग' && categoryName !== 'ब्रेकिंग न्यूज़') {
+      // If no slug provided but category name exists, try to use name directly
+      // This handles cases where slug might not be available yet
+      params.append('category', categoryName);
     }
     
     // District filter (only for राजस्थान, same logic as mock data)

@@ -210,11 +210,8 @@ export const deleteAccount = async () => {
     // Clear all user data on successful deletion
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
-    localStorage.removeItem('userMobileNumber');
-    localStorage.removeItem('userProfile');
     localStorage.removeItem('userCategories');
     localStorage.removeItem('userCity');
-    localStorage.removeItem('userId');
 
     return data;
   } catch (error) {
@@ -229,6 +226,5 @@ export const deleteAccount = async () => {
 export const logout = () => {
   localStorage.removeItem('userToken');
   localStorage.removeItem('userData');
-  localStorage.removeItem('userMobileNumber');
 };
 

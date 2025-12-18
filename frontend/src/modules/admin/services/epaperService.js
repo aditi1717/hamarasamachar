@@ -1,79 +1,98 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Mock data for e-papers
-let epapers = [
-    {
-        id: 1,
-        date: '2025-12-13',
-        pdfUrl: '/mock-epaper-2025-12-13.pdf',
-        coverUrl: 'https://via.placeholder.com/150x200?text=E-paper+13+Dec',
-        fileName: 'epaper_13_dec_2025.pdf',
-        views: 120
-    },
-    {
-        id: 2,
-        date: '2025-12-12',
-        pdfUrl: '/mock-epaper-2025-12-12.pdf',
-        coverUrl: 'https://via.placeholder.com/150x200?text=E-paper+12+Dec',
-        fileName: 'epaper_12_dec_2025.pdf',
-        views: 340
-    },
-    {
-        id: 3,
-        date: '2025-12-11',
-        pdfUrl: '/mock-epaper-2025-12-11.pdf',
-        coverUrl: 'https://via.placeholder.com/150x200?text=E-paper+11+Dec',
-        fileName: 'epaper_11_dec_2025.pdf',
-        views: 280
-    }
-];
+// Helper function to get auth token
+const getAuthToken = () => {
+    return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+};
 
 export const epaperService = {
     getAllEpapers: async (filters = {}) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                let filtered = [...epapers];
+        try {
+            const token = getAuthToken();
+            const params = new URLSearchParams();
+            
+            if (filters.startDate) params.append('startDate', filters.startDate);
+            if (filters.endDate) params.append('endDate', filters.endDate);
+            if (filters.page) params.append('page', filters.page);
+            if (filters.limit) params.append('limit', filters.limit);
 
-                if (filters.startDate && filters.endDate) {
-                    const start = new Date(filters.startDate).getTime();
-                    const end = new Date(filters.endDate).getTime();
-                    filtered = filtered.filter(e => {
-                        const eDate = new Date(e.date).getTime();
-                        return eDate >= start && eDate <= end;
-                    });
+            const response = await fetch(`${API_BASE_URL}/admin/epaper?${params}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
+            });
 
-                // Sort by date desc
-                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to fetch e-papers');
+            }
 
-                resolve({ data: filtered, total: filtered.length });
-            }, 500);
-        });
+            return data;
+        } catch (error) {
+            console.error('Get all epapers error:', error);
+            throw error;
+        }
     },
 
-    uploadEpaper: async (data) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newEpaper = {
-                    id: Date.now(),
-                    date: data.date,
-                    fileName: data.file.name,
-                    pdfUrl: URL.createObjectURL(data.file), // Mock URL
-                    coverUrl: data.coverImage ? URL.createObjectURL(data.coverImage) : 'https://via.placeholder.com/150x200?text=No+Cover',
-                    views: 0
-                };
-                epapers = [newEpaper, ...epapers];
-                resolve({ success: true, data: newEpaper });
-            }, 1000);
-        });
+    uploadEpaper: async (uploadData) => {
+        try {
+            const token = getAuthToken();
+            
+            // Create FormData
+            const formData = new FormData();
+            formData.append('date', uploadData.date);
+            formData.append('file', uploadData.file); // PDF file
+            
+            // Add cover image if provided
+            if (uploadData.coverImage) {
+                formData.append('coverImage', uploadData.coverImage);
+            }
+            
+            const response = await fetch(`${API_BASE_URL}/admin/epaper`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Don't set Content-Type header - browser will set it with boundary for FormData
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to upload e-paper');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Upload epaper error:', error);
+            throw error;
+        }
     },
 
     deleteEpaper: async (id) => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                epapers = epapers.filter(e => e.id !== id);
-                resolve({ success: true });
-            }, 300);
-        });
+        try {
+            const token = getAuthToken();
+            
+            const response = await fetch(`${API_BASE_URL}/admin/epaper/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to delete e-paper');
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Delete epaper error:', error);
+            throw error;
+        }
     }
 };
 

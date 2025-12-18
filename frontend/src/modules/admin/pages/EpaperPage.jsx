@@ -64,7 +64,7 @@ const EpaperPage = () => {
             });
             fetchEpapers();
         } catch (error) {
-            showToast('अपलोड करने में विफल', 'error');
+            showToast(error.message || 'अपलोड करने में विफल', 'error');
         }
     };
 

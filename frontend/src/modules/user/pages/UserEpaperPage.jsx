@@ -1,25 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNavbar from '../components/BottomNavbar';
-import { epaperService } from '../../admin/services/epaperService'; // Importing shared service
-
-// Mock subscription plans
-const PLANS = [
-    {
-        id: 'monthly',
-        name: 'मासिक प्लान',
-        price: 49,
-        period: 'प्रति माह',
-        features: ['दैनिक ई-पेपर एक्सेस', 'विज्ञापन मुक्त अनुभव', 'पुराने ई-पेपर आर्काइव']
-    },
-    {
-        id: 'yearly',
-        name: 'वार्षिक प्लान',
-        price: 499,
-        period: 'प्रति वर्ष',
-        features: ['दैनिक ई-पेपर एक्सेस', 'विज्ञापन मुक्त अनुभव', 'पुराने ई-पेपर आर्काइव', '2 महीने मुफ्त']
-    }
-];
+import { getUserEpapers } from '../services/epaperService';
+import { createPaymentOrder, verifyPayment, getSubscriptionStatus } from '../services/paymentService';
+import { getCurrentUser } from '../services/authService';
+import { getActivePlans } from '../services/planService';
 
 function UserEpaperPage() {
     const navigate = useNavigate();
@@ -27,48 +12,274 @@ function UserEpaperPage() {
     const [epapers, setEpapers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showSubscription, setShowSubscription] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState(PLANS[1]); // Default yearly
+    const [plans, setPlans] = useState([]);
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [processingPayment, setProcessingPayment] = useState(false);
+    const [userData, setUserData] = useState(null);
+    const [plansLoading, setPlansLoading] = useState(true);
 
     useEffect(() => {
-        // Check subscription status
-        const subscription = localStorage.getItem('userSubscription');
-        if (subscription === 'active') {
-            setIsSubscribed(true);
-        }
-
+        // Check subscription status from database
+        checkSubscriptionStatus();
         // Load epapers
         fetchEpapers();
+        // Load user data for prefill
+        loadUserData();
+        // Load plans from backend
+        loadPlans();
     }, []);
+
+    useEffect(() => {
+        // Set default selected plan when plans are loaded
+        if (plans.length > 0 && !selectedPlan) {
+            // Prefer yearly plan, otherwise select first plan
+            const yearlyPlan = plans.find(p => p.billingCycle === 'yearly');
+            setSelectedPlan(yearlyPlan || plans[0]);
+        }
+    }, [plans]);
+
+    const loadPlans = async () => {
+        try {
+            setPlansLoading(true);
+            const plansData = await getActivePlans();
+            setPlans(plansData);
+            // Set default selected plan
+            if (plansData.length > 0) {
+                const yearlyPlan = plansData.find(p => p.billingCycle === 'yearly');
+                setSelectedPlan(yearlyPlan || plansData[0]);
+            }
+        } catch (error) {
+            console.error('Error loading plans:', error);
+            // Fallback to empty array if API fails
+            setPlans([]);
+        } finally {
+            setPlansLoading(false);
+        }
+    };
+
+    const loadUserData = async () => {
+        try {
+            const user = await getCurrentUser();
+            if (user) {
+                setUserData(user);
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    };
+
+    const checkSubscriptionStatus = async () => {
+        try {
+            const status = await getSubscriptionStatus();
+            if (status.success && status.data.isActive) {
+                setIsSubscribed(true);
+            }
+        } catch (error) {
+            console.error('Error checking subscription status:', error);
+        }
+    };
 
     const fetchEpapers = async () => {
         try {
             setLoading(true);
-            const res = await epaperService.getAllEpapers();
-            setEpapers(res.data);
+            const res = await getUserEpapers({ page: 1, limit: 50 });
+            setEpapers(res.data || []);
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching epapers:', error);
+            setEpapers([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSubscribe = () => {
-        // Simulate Payment
-        // In a real app, this would open Payment Gateway
-        if (window.confirm(`क्या आप ₹${selectedPlan.price} का भुगतान करना चाहते हैं?`)) {
-            localStorage.setItem('userSubscription', 'active');
-            setIsSubscribed(true);
-            setShowSubscription(false);
-            alert('सब्सक्रिप्शन सफल रहा! अब आप ई-पेपर पढ़ सकते हैं।');
+    const handleSubscribe = async () => {
+        if (processingPayment || !selectedPlan) return;
+
+        try {
+            setProcessingPayment(true);
+
+            // Create payment order on backend
+            const orderResponse = await createPaymentOrder(
+                selectedPlan.planId || selectedPlan.id,
+                selectedPlan.billingCycle === 'monthly' ? 'monthly' : 'yearly',
+                selectedPlan.price
+            );
+
+            if (!orderResponse.success) {
+                const errorMsg = orderResponse.message || orderResponse.error || 'Payment order creation failed';
+                alert(errorMsg);
+                setProcessingPayment(false);
+                return;
+            }
+
+            const { orderId, amount, keyId } = orderResponse.data;
+
+            // Initialize Razorpay
+            const options = {
+                key: keyId,
+                amount: amount,
+                currency: 'INR',
+                name: 'Hamara Samachar',
+                description: `${selectedPlan.name} Subscription`,
+                order_id: orderId,
+                handler: async function (response) {
+                    try {
+                        // Verify payment on backend
+                        const verifyResponse = await verifyPayment(
+                            response.razorpay_order_id,
+                            response.razorpay_payment_id,
+                            response.razorpay_signature,
+                            selectedPlan.planId || selectedPlan.id,
+                            selectedPlan.billingCycle === 'monthly' ? 'monthly' : 'yearly',
+                            selectedPlan.price
+                        );
+
+                        if (verifyResponse.success) {
+                            setIsSubscribed(true);
+                            setShowSubscription(false);
+                            alert('सब्सक्रिप्शन सफल रहा! अब आप ई-पेपर पढ़ सकते हैं।');
+                            // Refresh subscription status
+                            await checkSubscriptionStatus();
+                        } else {
+                            alert('Payment verification failed. Please contact support.');
+                        }
+                    } catch (error) {
+                        console.error('Payment verification error:', error);
+                        alert('Payment verification failed. Please contact support.');
+                    } finally {
+                        setProcessingPayment(false);
+                    }
+                },
+                prefill: {
+                    contact: userData?.phone || '',
+                    email: userData?.email || ''
+                },
+                theme: {
+                    color: '#E21E26'
+                },
+                modal: {
+                    ondismiss: function() {
+                        setProcessingPayment(false);
+                    }
+                }
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.on('payment.failed', function (response) {
+                console.error('Payment failed:', response.error);
+                alert('Payment failed. Please try again.');
+                setProcessingPayment(false);
+            });
+            
+            razorpay.open();
+        } catch (error) {
+            console.error('Payment initialization error:', error);
+            const errorMsg = error.message || error.error || 'Payment initialization failed. Please try again.';
+            alert(errorMsg);
+            setProcessingPayment(false);
         }
     };
 
-    const handleEpaperClick = (paper) => {
+    const downloadPDF = async (pdfUrl, fileName) => {
+        try {
+            // Check if it's a Cloudinary URL and add download parameter
+            let downloadUrl = pdfUrl;
+            if (pdfUrl.includes('cloudinary.com')) {
+                // Add fl_attachment parameter to force download from Cloudinary
+                if (pdfUrl.includes('?')) {
+                    downloadUrl = `${pdfUrl}&fl_attachment=${encodeURIComponent(fileName)}`;
+                } else {
+                    downloadUrl = `${pdfUrl}?fl_attachment=${encodeURIComponent(fileName)}`;
+                }
+            }
+            
+            // Try method 1: Direct download with fetch (works for most cases)
+            try {
+                const response = await fetch(downloadUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch PDF');
+                }
+                
+                // Convert response to blob
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            } catch (fetchError) {
+                // Fallback method: Use anchor tag with download attribute
+                console.warn('Fetch method failed, trying direct download:', fetchError);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = fileName;
+                link.target = '_blank';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            // Final fallback: open in new tab
+            alert('PDF डाउनलोड करने में समस्या हुई। PDF नए टैब में खुल रहा है।');
+            window.open(pdfUrl, '_blank');
+        }
+    };
+
+    const formatDateForFileName = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `Hamara_Samachar_${day}-${month}-${year}.pdf`;
+    };
+
+    const handleEpaperClick = async (paper) => {
         if (!isSubscribed) {
+            // Check if user is logged in
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                alert('ई-पेपर पढ़ने के लिए कृपया लॉगिन करें और सब्सक्राइब करें।');
+                navigate('/login');
+                return;
+            }
             setShowSubscription(true);
         } else {
-            // Open PDF
-            window.open(paper.pdfUrl, '_blank');
+            // Verify subscription status before downloading PDF
+            try {
+                const status = await getSubscriptionStatus();
+                if (status.success && status.data.isActive) {
+                    // Download PDF with formatted filename
+                    const fileName = formatDateForFileName(paper.date);
+                    await downloadPDF(paper.pdfUrl, fileName);
+                } else {
+                    setIsSubscribed(false);
+                    setShowSubscription(true);
+                    alert('आपकी सब्सक्रिप्शन समाप्त हो गई है। कृपया नवीनीकरण करें।');
+                }
+            } catch (error) {
+                console.error('Error verifying subscription:', error);
+                // Still try to download PDF if verification fails
+                const fileName = formatDateForFileName(paper.date);
+                await downloadPDF(paper.pdfUrl, fileName);
+            }
         }
     };
 
@@ -92,47 +303,66 @@ function UserEpaperPage() {
                     </div>
 
                     <div className="px-4 -mt-10 space-y-4">
-                        {PLANS.map((plan) => (
-                            <div
-                                key={plan.id}
-                                onClick={() => setSelectedPlan(plan)}
-                                className={`bg-white rounded-xl shadow-lg border-2 p-6 transition-all relative ${selectedPlan.id === plan.id ? 'border-[#E21E26] transform scale-105' : 'border-transparent'
-                                    }`}
-                            >
-                                {plan.id === 'yearly' && (
-                                    <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg">
-                                        BEST VALUE
-                                    </div>
-                                )}
-                                <div className="flex justify-between items-center mb-4">
-                                    <div>
-                                        <h3 className="font-bold text-lg text-gray-800">{plan.name}</h3>
-                                        <p className="text-gray-500 text-sm">{plan.period}</p>
-                                    </div>
-                                    <div className="text-2xl font-bold text-[#E21E26]">
-                                        ₹{plan.price}
-                                    </div>
-                                </div>
-                                <ul className="space-y-2 mb-4">
-                                    {plan.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
-                                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
+                        {plansLoading ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#E21E26]"></div>
                             </div>
-                        ))}
+                        ) : plans.length > 0 ? (
+                            plans.map((plan) => (
+                                <div
+                                    key={plan.id || plan.planId}
+                                    onClick={() => setSelectedPlan(plan)}
+                                    className={`bg-white rounded-xl shadow-lg border-2 p-6 transition-all relative ${selectedPlan && (selectedPlan.id === plan.id || selectedPlan.planId === plan.planId) ? 'border-[#E21E26] transform scale-105' : 'border-transparent'
+                                        }`}
+                                >
+                                    {plan.billingCycle === 'yearly' && (
+                                        <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-2 py-1 rounded-bl-lg rounded-tr-lg">
+                                            BEST VALUE
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-gray-800">{plan.name}</h3>
+                                            <p className="text-gray-500 text-sm">{plan.period}</p>
+                                        </div>
+                                        <div className="text-2xl font-bold text-[#E21E26]">
+                                            ₹{plan.price}
+                                        </div>
+                                    </div>
+                                    <ul className="space-y-2 mb-4">
+                                        {plan.features && plan.features.length > 0 ? (
+                                            plan.features.map((feature, idx) => (
+                                                <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    {feature}
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="text-sm text-gray-500">No features listed</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                <p>कोई प्लान उपलब्ध नहीं है</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="p-4 mt-4">
                         <button
                             onClick={handleSubscribe}
-                            className="w-full py-3 bg-[#E21E26] text-white rounded-xl font-bold text-lg shadow-lg hover:bg-[#C21A20] transition-colors"
+                            disabled={processingPayment || !selectedPlan || plansLoading}
+                            className={`w-full py-3 bg-[#E21E26] text-white rounded-xl font-bold text-lg shadow-lg transition-colors ${
+                                processingPayment || !selectedPlan || plansLoading
+                                    ? 'opacity-50 cursor-not-allowed' 
+                                    : 'hover:bg-[#C21A20]'
+                            }`}
                         >
-                            {selectedPlan.name} चुनें (₹{selectedPlan.price})
+                            {processingPayment ? 'प्रोसेसिंग...' : plansLoading ? 'लोड हो रहा है...' : selectedPlan ? `${selectedPlan.name} चुनें (₹${selectedPlan.price})` : 'प्लान चुनें'}
                         </button>
                         <p className="text-center text-xs text-gray-500 mt-3">
                             नियम और शर्तें लागू। कभी भी रद्द करें।
@@ -200,14 +430,17 @@ function UserEpaperPage() {
                         <div className="grid grid-cols-2 gap-4">
                             {epapers.map((paper) => (
                                 <div
-                                    key={paper.id}
+                                    key={paper.id || paper._id}
                                     onClick={() => handleEpaperClick(paper)}
                                     className="bg-white rounded-lg shadow-sm overflow-hidden group cursor-pointer relative"
                                 >
                                     <div className="aspect-[3/4] bg-gray-200 relative">
                                         <img
-                                            src={paper.coverUrl}
+                                            src={paper.coverUrl || 'https://via.placeholder.com/150x200?text=E-paper'}
                                             alt={paper.date}
+                                            onError={(e) => {
+                                                e.target.src = 'https://via.placeholder.com/150x200?text=E-paper';
+                                            }}
                                             className={`w-full h-full object-cover transition-all duration-300 ${!isSubscribed ? 'filter blur-[2px]' : ''}`}
                                         />
                                         {!isSubscribed && (

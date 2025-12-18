@@ -1,8 +1,10 @@
 import Epaper from '../../models/Epaper.js';
+import Subscription from '../../models/Subscription.js';
+import User from '../../models/User.js';
 
 // @desc    Get all epapers
 // @route   GET /api/user/epaper
-// @access  Public
+// @access  Public (but subscription check for PDF access)
 export const getAllEpapers = async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -17,12 +19,24 @@ export const getAllEpapers = async (req, res) => {
 
     const total = await Epaper.countDocuments();
 
+    // Check if user has active subscription (optional - for frontend to show/hide lock icons)
+    let hasActiveSubscription = false;
+    if (req.user) {
+      const subscription = await Subscription.findOne({
+        user: req.user._id,
+        status: 'active',
+        endDate: { $gt: new Date() }
+      });
+      hasActiveSubscription = !!subscription;
+    }
+
     res.json({
       success: true,
       data: epapers,
       total,
       page: parseInt(page),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      hasActiveSubscription // Include subscription status for frontend
     });
   } catch (error) {
     res.status(500).json({
@@ -34,7 +48,7 @@ export const getAllEpapers = async (req, res) => {
 
 // @desc    Get epaper by ID
 // @route   GET /api/user/epaper/:id
-// @access  Public
+// @access  Public (but subscription required for PDF access)
 export const getEpaperById = async (req, res) => {
   try {
     const epaper = await Epaper.findById(req.params.id);
@@ -43,6 +57,22 @@ export const getEpaperById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'E-paper not found'
+      });
+    }
+
+    // User is authenticated (required by route middleware)
+    // Check if user has active subscription
+    const subscription = await Subscription.findOne({
+      user: req.user._id,
+      status: 'active',
+      endDate: { $gt: new Date() }
+    });
+
+    if (!subscription) {
+      return res.status(403).json({
+        success: false,
+        message: 'Active subscription required to access e-paper',
+        requiresSubscription: true
       });
     }
 

@@ -17,9 +17,9 @@ function NewsDetailPage() {
   // Check login status
   useEffect(() => {
     const checkLoginStatus = () => {
-      const userMobileNumber = localStorage.getItem('userMobileNumber');
-      const userProfile = localStorage.getItem('userProfile');
-      setIsLoggedIn(!!(userMobileNumber || userProfile));
+      const userToken = localStorage.getItem('userToken');
+      const userData = localStorage.getItem('userData');
+      setIsLoggedIn(!!(userToken || userData));
     };
 
     checkLoginStatus();

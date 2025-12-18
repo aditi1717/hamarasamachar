@@ -5,7 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
  * Transform API news data to match frontend expected format
  */
 const transformNewsData = (newsArray) => {
-  return newsArray.map(news => ({
+  // Filter out null/undefined news items (news that may have been deleted)
+  const validNews = (newsArray || []).filter(news => news !== null && news !== undefined);
+  
+  return validNews.map(news => ({
     id: news._id || news.id,
     title: news.title,
     category: news.category?.name || news.categoryName || 'अन्य',

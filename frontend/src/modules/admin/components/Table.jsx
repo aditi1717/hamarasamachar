@@ -9,6 +9,7 @@ function Table({
   onRowClick,
   actions = [],
   emptyMessage = 'कोई डेटा नहीं मिला',
+  loading = false,
   className = ''
 }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,7 +117,16 @@ function Table({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {sortedData.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={columns.length + (actions.length > 0 ? 1 : 0)} className="px-3 sm:px-4 md:px-6 py-8 text-center">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E21E26]"></div>
+                    <p className="ml-3 text-sm sm:text-base text-gray-500">लोड हो रहा है...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : sortedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + (actions.length > 0 ? 1 : 0)} className="px-3 sm:px-4 md:px-6 py-8 text-center">
                   <p className="text-sm sm:text-base text-gray-500">{emptyMessage}</p>

@@ -1,128 +1,233 @@
-const PLAN_STORAGE_KEY = 'hs_admin_plans';
-const SUBSCRIBER_STORAGE_KEY = 'hs_admin_subscribers';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const seedPlans = [
-  {
-    id: 'plan-monthly-basic',
-    name: 'मासिक प्लान',
-    billingCycle: 'monthly',
-    price: 149,
-    description: '30 दिन की पहुँच',
-  },
-  {
-    id: 'plan-yearly-standard',
-    name: 'वार्षिक प्लान',
-    billingCycle: 'yearly',
-    price: 999,
-    description: '365 दिन की पहुँच',
-  },
-];
+// Helper function to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+};
 
-const seedSubscribers = [
-  {
-    id: 'sub-001',
-    name: 'Ravi Sharma',
-    email: 'ravi@example.com',
-    phone: '+91 98765 43210',
-    planId: 'plan-monthly-basic',
-    planName: 'मासिक प्लान',
-    billingCycle: 'monthly',
-    amount: 149,
-    startDate: '2024-12-01',
-    endDate: '2024-12-31',
-    status: 'Active',
-  },
-  {
-    id: 'sub-002',
-    name: 'Anita Verma',
-    email: 'anita@example.com',
-    phone: '+91 99887 76655',
-    planId: 'plan-yearly-standard',
-    planName: 'वार्षिक प्लान',
-    billingCycle: 'yearly',
-    amount: 999,
-    startDate: '2024-11-10',
-    endDate: '2025-11-09',
-    status: 'Active',
-  },
-  {
-    id: 'sub-003',
-    name: 'Mohit Singh',
-    email: 'mohit@example.com',
-    phone: '+91 91234 56789',
-    planId: 'plan-monthly-basic',
-    planName: 'मासिक प्लान',
-    billingCycle: 'monthly',
-    amount: 149,
-    startDate: '2024-11-20',
-    endDate: '2024-12-19',
-    status: 'Expired',
-  },
-];
-
-const safeParse = (value, fallback) => {
+/**
+ * Get all plans from backend
+ * @returns {Promise<Array>} Array of plans
+ */
+export const getPlans = async () => {
   try {
-    return JSON.parse(value) || fallback;
-  } catch {
-    return fallback;
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch plans');
+    }
+
+    // Transform API response to match frontend format
+    return (data.data || []).map(plan => ({
+      id: plan._id || plan.id,
+      name: plan.name,
+      billingCycle: plan.billingCycle,
+      price: plan.price,
+      description: plan.description || '',
+      features: plan.features || [],
+      status: plan.status || 'active',
+      order: plan.order || 0
+    }));
+  } catch (error) {
+    console.error('Get plans error:', error);
+    throw error;
   }
 };
 
-const ensureSeeds = () => {
-  if (typeof window === 'undefined') return;
+/**
+ * Create a new plan
+ * @param {Object} planInput - Plan data
+ * @returns {Promise<Object>} Created plan
+ */
+export const createPlan = async (planInput) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(planInput)
+    });
 
-  if (!localStorage.getItem(PLAN_STORAGE_KEY)) {
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(seedPlans));
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create plan');
+    }
+
+    // Transform API response
+    const plan = data.data;
+    return {
+      id: plan._id || plan.id,
+      name: plan.name,
+      billingCycle: plan.billingCycle,
+      price: plan.price,
+      description: plan.description || '',
+      features: plan.features || [],
+      status: plan.status || 'active',
+      order: plan.order || 0
+    };
+  } catch (error) {
+    console.error('Create plan error:', error);
+    throw error;
   }
+};
 
-  if (!localStorage.getItem(SUBSCRIBER_STORAGE_KEY)) {
-    localStorage.setItem(SUBSCRIBER_STORAGE_KEY, JSON.stringify(seedSubscribers));
+/**
+ * Update a plan
+ * @param {String} planId - Plan ID
+ * @param {Object} planInput - Updated plan data
+ * @returns {Promise<Object>} Updated plan
+ */
+export const updatePlan = async (planId, planInput) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans/${planId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(planInput)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update plan');
+    }
+
+    const plan = data.data;
+    return {
+      id: plan._id || plan.id,
+      name: plan.name,
+      billingCycle: plan.billingCycle,
+      price: plan.price,
+      description: plan.description || '',
+      features: plan.features || [],
+      status: plan.status || 'active',
+      order: plan.order || 0
+    };
+  } catch (error) {
+    console.error('Update plan error:', error);
+    throw error;
   }
 };
 
-export const getPlans = () => {
-  ensureSeeds();
-  const stored = localStorage.getItem(PLAN_STORAGE_KEY);
-  return safeParse(stored, seedPlans);
+/**
+ * Delete a plan
+ * @param {String} planId - Plan ID
+ * @returns {Promise<Array>} Updated plans array
+ */
+export const deletePlan = async (planId) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans/${planId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to delete plan');
+    }
+
+    // Return updated plans list
+    return await getPlans();
+  } catch (error) {
+    console.error('Delete plan error:', error);
+    throw error;
+  }
 };
 
-export const createPlan = (planInput) => {
-  ensureSeeds();
-  const plans = getPlans();
-  const newPlan = {
-    id: `plan-${Date.now()}`,
-    ...planInput,
-  };
-  const updated = [newPlan, ...plans];
-  localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(updated));
-  return newPlan;
+/**
+ * Get all subscribers from backend
+ * @param {Object} filters - Filter options
+ * @returns {Promise<Array>} Array of subscribers
+ */
+export const getSubscribers = async (filters = {}) => {
+  try {
+    const token = getAuthToken();
+    const params = new URLSearchParams();
+    
+    if (filters.status) params.append('status', filters.status);
+    if (filters.planId) params.append('planId', filters.planId);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page);
+    if (filters.limit) params.append('limit', filters.limit);
+
+    const response = await fetch(`${API_BASE_URL}/admin/plans/subscribers?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch subscribers');
+    }
+
+    // Transform API response to match frontend format
+    return (data.data || []).map(sub => ({
+      id: sub.id,
+      name: sub.name,
+      email: sub.email,
+      phone: sub.phone,
+      planId: sub.planId,
+      planName: sub.planName,
+      billingCycle: sub.billingCycle,
+      amount: sub.amount,
+      startDate: sub.startDate,
+      endDate: sub.endDate,
+      status: sub.status
+    }));
+  } catch (error) {
+    console.error('Get subscribers error:', error);
+    throw error;
+  }
 };
 
-export const deletePlan = (planId) => {
-  ensureSeeds();
-  const plans = getPlans().filter((plan) => plan.id !== planId);
-  localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(plans));
-  return plans;
+/**
+ * Get plan statistics
+ * @returns {Promise<Object>} Plan statistics
+ */
+export const getPlanStats = async () => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans/stats`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch plan statistics');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Get plan stats error:', error);
+    throw error;
+  }
 };
 
-export const getSubscribers = () => {
-  ensureSeeds();
-  const stored = localStorage.getItem(SUBSCRIBER_STORAGE_KEY);
-  return safeParse(stored, seedSubscribers);
-};
-
-export const addMockSubscriber = (subscriberInput) => {
-  // Helper to allow front-end only additions if ever needed
-  ensureSeeds();
-  const subscribers = getSubscribers();
-  const newSubscriber = {
-    id: `sub-${Date.now()}`,
-    ...subscriberInput,
-  };
-  const updated = [newSubscriber, ...subscribers];
-  localStorage.setItem(SUBSCRIBER_STORAGE_KEY, JSON.stringify(updated));
-  return newSubscriber;
-};
 
 
 

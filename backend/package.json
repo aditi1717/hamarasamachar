@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "migrate-user-ids": "node scripts/migrateUserIds.js",
     "fix-category-slugs": "node scripts/fixCategorySlugs.js",
-    "reset-admin-password": "node scripts/resetAdminPassword.js"
+    "reset-admin-password": "node scripts/resetAdminPassword.js",
+    "seed-plans": "node backend/scripts/seedPlans.js"
   },
   "keywords": [
     "news",
@@ -31,7 +32,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^7.0.11",
-    "otp-generator": "^4.0.0"
+    "otp-generator": "^4.0.0",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

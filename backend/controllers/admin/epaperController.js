@@ -57,7 +57,11 @@ export const uploadEpaper = async (req, res) => {
       });
     }
 
-    if (!req.file) {
+    // Check if files are uploaded
+    const pdfFile = req.files && req.files['file'] ? req.files['file'][0] : null;
+    const coverImageFile = req.files && req.files['coverImage'] ? req.files['coverImage'][0] : null;
+
+    if (!pdfFile) {
       return res.status(400).json({
         success: false,
         message: 'Please upload PDF file'
@@ -74,21 +78,26 @@ export const uploadEpaper = async (req, res) => {
     }
 
     // Upload PDF to Cloudinary
-    const pdfResult = await uploadToCloudinary(req.file, 'hamarasamachar/epaper', 'raw');
+    const pdfResult = await uploadToCloudinary(pdfFile, 'hamarasamachar/epaper', 'raw');
 
-    // Upload cover image if provided
+    // Upload cover image to Cloudinary if provided
     let coverUrl = '';
-    if (req.body.coverImage) {
-      // If cover image is provided as base64 or URL, handle accordingly
-      // For now, assuming it's uploaded separately
-      coverUrl = req.body.coverImage;
+    if (coverImageFile) {
+      try {
+        const coverResult = await uploadToCloudinary(coverImageFile, 'hamarasamachar/epaper/covers', 'image');
+        coverUrl = coverResult.secure_url;
+      } catch (coverError) {
+        console.error('Error uploading cover image:', coverError);
+        // Continue without cover image if upload fails
+        coverUrl = '';
+      }
     }
 
     const epaper = await Epaper.create({
       date: new Date(date),
       pdfUrl: pdfResult.secure_url,
       coverUrl: coverUrl,
-      fileName: req.file.originalname,
+      fileName: pdfFile.originalname,
       views: 0
     });
 
@@ -126,11 +135,18 @@ export const deleteEpaper = async (req, res) => {
       console.error('Error deleting PDF:', error);
     }
 
-    // Delete cover image if exists
+    // Delete cover image from Cloudinary if exists
     if (epaper.coverUrl) {
       try {
-        const coverPublicId = epaper.coverUrl.split('/').pop().split('.')[0];
-        await deleteFromCloudinary(`hamarasamachar/epaper/${coverPublicId}`);
+        // Extract public ID from Cloudinary URL
+        // URL format: https://res.cloudinary.com/.../hamarasamachar/epaper/covers/filename
+        const urlParts = epaper.coverUrl.split('/');
+        const coversIndex = urlParts.findIndex(part => part === 'covers');
+        if (coversIndex !== -1) {
+          const publicIdParts = urlParts.slice(coversIndex);
+          const publicId = publicIdParts.join('/').replace(/\.[^/.]+$/, ''); // Remove extension
+          await deleteFromCloudinary(publicId, 'image');
+        }
       } catch (error) {
         console.error('Error deleting cover image:', error);
       }

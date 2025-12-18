@@ -11,12 +11,15 @@ import {
   deletePlan,
   getPlans,
   getSubscribers,
+  getPlanStats,
 } from '../services/planService';
 
 function SubscriptionPlansPage() {
   const { toast, showToast, hideToast } = useToast();
   const [plans, setPlans] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ plans: { total: 0, monthly: 0, yearly: 0 } });
   const [formData, setFormData] = useState({
     name: '',
     billingCycle: 'monthly',
@@ -25,22 +28,46 @@ function SubscriptionPlansPage() {
   });
 
   useEffect(() => {
-    setPlans(getPlans());
-    setSubscribers(getSubscribers());
+    loadData();
   }, []);
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [plansData, subscribersData, statsData] = await Promise.all([
+        getPlans(),
+        getSubscribers(),
+        getPlanStats()
+      ]);
+      setPlans(plansData);
+      setSubscribers(subscribersData);
+      if (statsData) {
+        setStats(statsData);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showToast('डेटा लोड करने में त्रुटि हुई', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const planSummary = useMemo(() => {
+    // Use stats from backend if available, otherwise calculate from plans
+    if (stats.plans && stats.plans.total > 0) {
+      return stats.plans;
+    }
     const monthly = plans.filter((p) => p.billingCycle === 'monthly').length;
     const yearly = plans.filter((p) => p.billingCycle === 'yearly').length;
     return { total: plans.length, monthly, yearly };
-  }, [plans]);
+  }, [plans, stats]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreatePlan = (e) => {
+  const handleCreatePlan = async (e) => {
     e.preventDefault();
     const { name, billingCycle, price, description } = formData;
 
@@ -55,30 +82,44 @@ function SubscriptionPlansPage() {
       return;
     }
 
-    const newPlan = createPlan({
-      name: name.trim(),
-      billingCycle,
-      price: parsedPrice,
-      description: description.trim(),
-    });
+    try {
+      const newPlan = await createPlan({
+        name: name.trim(),
+        billingCycle,
+        price: parsedPrice,
+        description: description.trim(),
+      });
 
-    setPlans((prev) => [newPlan, ...prev]);
-    setFormData({
-      name: '',
-      billingCycle: 'monthly',
-      price: '',
-      description: '',
-    });
-    showToast('नया प्लान जोड़ दिया गया', 'success');
+      setPlans((prev) => [newPlan, ...prev]);
+      setFormData({
+        name: '',
+        billingCycle: 'monthly',
+        price: '',
+        description: '',
+      });
+      showToast('नया प्लान जोड़ दिया गया', 'success');
+      // Reload stats
+      const statsData = await getPlanStats();
+      if (statsData) setStats(statsData);
+    } catch (error) {
+      showToast(error.message || 'प्लान बनाने में त्रुटि हुई', 'error');
+    }
   };
 
-  const handleDeletePlan = (plan) => {
+  const handleDeletePlan = async (plan) => {
     const confirmDelete = window.confirm(`"${plan.name}" प्लान हटाएं?`);
     if (!confirmDelete) return;
 
-    const updatedPlans = deletePlan(plan.id);
-    setPlans(updatedPlans);
-    showToast('प्लान हटाया गया', 'info');
+    try {
+      const updatedPlans = await deletePlan(plan.id);
+      setPlans(updatedPlans);
+      showToast('प्लान हटाया गया', 'info');
+      // Reload stats
+      const statsData = await getPlanStats();
+      if (statsData) setStats(statsData);
+    } catch (error) {
+      showToast(error.message || 'प्लान हटाने में त्रुटि हुई', 'error');
+    }
   };
 
   const planColumns = [
@@ -139,9 +180,11 @@ function SubscriptionPlansPage() {
       sortable: true,
       render: (value, row) => (
         <div>
-          <p className="font-semibold text-gray-900">{value}</p>
+          <p className="font-semibold text-gray-900">
+            {value === 'Unknown' && row.userId ? row.userId : value}
+          </p>
           <p className="text-xs text-gray-500">
-            {row.email} · {row.phone}
+            {row.userId && value !== 'Unknown' ? `ID: ${row.userId}` : ''} {row.phone ? (row.userId && value !== 'Unknown' ? `· ${row.phone}` : row.phone) : ''}
           </p>
         </div>
       ),
@@ -199,27 +242,33 @@ function SubscriptionPlansPage() {
       <Layout
         title="सब्सक्रिप्शन प्लान"
         pageHeaderRightContent={
-          <span className="text-xs sm:text-sm text-gray-500">
-            यह फीचर केवल फ्रंटएंड (लोकल स्टोरेज) पर चलता है
+          <span className="text-xs sm:text-sm text-green-600 font-medium">
+            ✓ बैकएंड और डेटाबेस से कनेक्टेड
           </span>
         }
       >
         <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
-          {/* Summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-              <p className="text-xs text-gray-500 mb-1">कुल प्लान</p>
-              <p className="text-2xl font-bold text-gray-900">{planSummary.total}</p>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#E21E26]"></div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-              <p className="text-xs text-gray-500 mb-1">मासिक</p>
-              <p className="text-2xl font-bold text-gray-900">{planSummary.monthly}</p>
-            </div>
-            <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
-              <p className="text-xs text-gray-500 mb-1">वार्षिक</p>
-              <p className="text-2xl font-bold text-gray-900">{planSummary.yearly}</p>
-            </div>
-          </div>
+          ) : (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1">कुल प्लान</p>
+                  <p className="text-2xl font-bold text-gray-900">{planSummary.total}</p>
+                </div>
+                <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1">मासिक</p>
+                  <p className="text-2xl font-bold text-gray-900">{planSummary.monthly}</p>
+                </div>
+                <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-1">वार्षिक</p>
+                  <p className="text-2xl font-bold text-gray-900">{planSummary.yearly}</p>
+                </div>
+              </div>
 
           <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
             {/* Create plan form */}
@@ -305,7 +354,7 @@ function SubscriptionPlansPage() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-gray-900">सब्सक्राइब किए उपयोगकर्ता</h3>
               <span className="text-xs sm:text-sm text-gray-500">
-                {subscribers.length} रिकॉर्ड्स · केवल डेमो डेटा
+                {subscribers.length} रिकॉर्ड्स
               </span>
             </div>
             <Table
@@ -316,6 +365,8 @@ function SubscriptionPlansPage() {
               emptyMessage="सब्सक्रिप्शन रिकॉर्ड उपलब्ध नहीं"
             />
           </div>
+            </>
+          )}
         </div>
 
         {toast && (
@@ -332,6 +383,7 @@ function SubscriptionPlansPage() {
 }
 
 export default SubscriptionPlansPage;
+
 
 
 

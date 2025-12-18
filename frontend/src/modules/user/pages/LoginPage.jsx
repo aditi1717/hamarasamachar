@@ -54,9 +54,7 @@ function LoginPage() {
       const response = await sendOTP(fullPhoneNumber, 'registration');
       
       if (response.success) {
-        // Save mobile number to localStorage
-        localStorage.setItem('userMobileNumber', fullPhoneNumber);
-        // Navigate to OTP page
+        // Navigate to OTP page (mobile number will be saved in userData after OTP verification)
         navigate('/otp', { state: { mobileNumber: fullPhoneNumber } });
       } else {
         setError(response.message || 'OTP भेजने में समस्या हुई');

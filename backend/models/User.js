@@ -108,6 +108,20 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     }
+  },
+  subscription: {
+    isActive: {
+      type: Boolean,
+      default: false
+    },
+    planType: {
+      type: String,
+      enum: ['monthly', 'yearly', null],
+      default: null
+    },
+    expiryDate: {
+      type: Date
+    }
   }
 }, {
   timestamps: true
