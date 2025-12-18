@@ -101,7 +101,10 @@ export const addLead = async (leadInput) => {
       address: leadInput.address || '',
       status: 'new',
       createdAt: new Date().toISOString(),
-      source: leadInput.source || 'website'
+      source: leadInput.source || 'website',
+      additionalInfo: leadInput.additionalInfo || '',
+      qualification: leadInput.qualification || '',
+      age: leadInput.age || ''
     };
     
     allLeads.push(newLead);

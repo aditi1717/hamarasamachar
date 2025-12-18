@@ -11,24 +11,7 @@ import {
   getLeadStats,
 } from '../../shared/services/franchiseLeadService';
 
-const statusStyles = {
-  new: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
-  contacted: 'bg-blue-100 text-blue-700 border border-blue-200',
-  closed: 'bg-green-100 text-green-700 border border-green-200',
-};
-
-function formatDate(dateString) {
-  try {
-    return new Date(dateString).toLocaleString('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  } catch {
-    return dateString || '-';
-  }
-}
-
-function FranchiseLeadsPage() {
+function JournalistTrainingLeadsPage() {
   const { toast, showToast, hideToast } = useToast();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,13 +26,9 @@ function FranchiseLeadsPage() {
     try {
       setLoading(true);
       const allLeads = await getLeads();
-      // Filter only franchise leads
-      const franchiseLeads = allLeads.filter(lead => 
-        lead.source === 'franchise_application_page' || 
-        lead.source === 'franchise_page' ||
-        !lead.source // Include old leads without source as franchise
-      );
-      setLeads(franchiseLeads);
+      // Filter only training leads
+      const trainingLeads = allLeads.filter(lead => lead.source === 'journalist_training_page');
+      setLeads(trainingLeads);
     } catch (error) {
       console.error('Error fetching leads:', error);
       showToast('लीड्स लोड करने में त्रुटि हुई', 'error');
@@ -62,17 +41,13 @@ function FranchiseLeadsPage() {
   const fetchStats = async () => {
     try {
       const allLeads = await getLeads();
-      const franchiseLeads = allLeads.filter(lead => 
-        lead.source === 'franchise_application_page' || 
-        lead.source === 'franchise_page' ||
-        !lead.source
-      );
+      const trainingLeads = allLeads.filter(lead => lead.source === 'journalist_training_page');
       
       setStats({
-        total: franchiseLeads.length,
-        new: franchiseLeads.filter(l => l.status === 'new' || !l.status).length,
-        contacted: franchiseLeads.filter(l => l.status === 'contacted').length,
-        closed: franchiseLeads.filter(l => l.status === 'closed').length
+        total: trainingLeads.length,
+        new: trainingLeads.filter(l => l.status === 'new' || !l.status).length,
+        contacted: trainingLeads.filter(l => l.status === 'contacted').length,
+        closed: trainingLeads.filter(l => l.status === 'closed').length
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -121,6 +96,22 @@ function FranchiseLeadsPage() {
       ),
     },
     {
+      key: 'qualification',
+      label: 'योग्यता',
+      sortable: true,
+      render: (value) => (
+        <span className="text-gray-800">{value || '-'}</span>
+      ),
+    },
+    {
+      key: 'age',
+      label: 'उम्र',
+      sortable: true,
+      render: (value) => (
+        <span className="text-gray-800">{value ? `${value} वर्ष` : '-'}</span>
+      ),
+    },
+    {
       key: 'address',
       label: 'पता / जिला / तहसील',
       render: (value) => <span className="text-gray-800">{value}</span>,
@@ -162,11 +153,11 @@ function FranchiseLeadsPage() {
 
   return (
     <ProtectedRoute>
-      <Layout title="फ्रेंचाइजी लीड्स">
+      <Layout title="प्रशिक्षण लीड्स">
         <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
           <div className="bg-white rounded-xl shadow-md p-4 border border-gray-100 flex items-center justify-between">
             <div>
-              <p className="text-xs text-gray-500 mb-1">कुल फ्रेंचाइजी लीड्स</p>
+              <p className="text-xs text-gray-500 mb-1">कुल प्रशिक्षण लीड्स</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
             <div className="text-right">
@@ -183,7 +174,7 @@ function FranchiseLeadsPage() {
             sortable
             searchable
             actions={actions}
-            emptyMessage={loading ? 'लीड्स लोड हो रहे हैं...' : 'अभी कोई फ्रेंचाइजी लीड नहीं है'}
+            emptyMessage={loading ? 'लीड्स लोड हो रहे हैं...' : 'अभी कोई प्रशिक्षण लीड नहीं है'}
             loading={loading}
             className="border border-gray-100"
           />
@@ -202,6 +193,5 @@ function FranchiseLeadsPage() {
   );
 }
 
-export default FranchiseLeadsPage;
-
+export default JournalistTrainingLeadsPage;
 

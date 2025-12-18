@@ -1,17 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { addLead } from '../../shared/services/franchiseLeadService';
-
 
 function FranchisePage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    address: '',
-  });
-  const [submitMessage, setSubmitMessage] = useState('');
-
 
   const handlePhoneClick = (phone) => {
     window.location.href = `tel:${phone}`;
@@ -19,38 +9,6 @@ function FranchisePage() {
 
   const handleEmailClick = () => {
     window.location.href = 'mailto:hamarasamachar62@gmail.com';
-  };
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const { name, phone, address } = formData;
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      setSubmitMessage('कृपया सभी फ़ील्ड भरें');
-      return;
-    }
-
-    try {
-      setSubmitMessage('भेजा जा रहा है...');
-      await addLead({
-        name: name.trim(),
-        phone: phone.trim(),
-        address: address.trim(),
-        source: 'franchise_page',
-      });
-      setSubmitMessage('अनुरोध प्राप्त हुआ! टीम आपसे शीघ्र संपर्क करेगी।');
-      // Reset fields after a short acknowledgement
-      setFormData({ name: '', phone: '', address: '' });
-      setTimeout(() => setSubmitMessage(''), 4000);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setSubmitMessage('त्रुटि हुई। कृपया पुनः प्रयास करें।');
-      setTimeout(() => setSubmitMessage(''), 4000);
-    }
   };
 
   return (
@@ -203,101 +161,42 @@ function FranchisePage() {
           {/* Manager Section */}
           <div className="bg-[#E21E26]/5 rounded-lg p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">मैनेजर</h2>
-            <div className="text-sm sm:text-base text-gray-700">
+            <div className="text-sm sm:text-base text-gray-700 mb-4">
               <p className="text-gray-600">राजस्थान हेड फ्रेंचाइजी मैनेजर</p>
             </div>
+            {/* Franchise Application Button */}
+            <button
+              onClick={() => navigate('/franchise/apply')}
+              className="w-full sm:w-auto bg-[#E21E26] text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-[#c91b22] transition-colors flex items-center justify-center gap-2 mb-3"
+            >
+              <span>फ्रेंचाइजी लेने के लिए</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
-          {/* Terms & Conditions - always visible */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 md:p-6 mb-6 sm:mb-8 space-y-3 text-sm sm:text-base text-gray-800 leading-relaxed">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-              फ्रेंचाइजी लेने के नियम व शर्तें
-            </h3>
-            <p className="font-medium text-gray-700">
-              संपूर्ण राजस्थान में जिस किसी को जिला या तहसील में न्यूज व विज्ञापन फ्रेंचाइजी लेना है उनके लिए नियम व शर्तें:
-            </p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>जिला फ्रेंचाइजी की सिक्योरिटी राशि - 5 लाख</li>
-              <li>तहसील फ्रेंचाइजी की सिक्योरिटी राशि - 1.50 लाख</li>
-              <li>न्यूज व विज्ञापन फ्रेंचाइजी लेने के लिए 500/रुपए के स्टांप पर एग्रीमेंट होगा।</li>
-              <li>जिला व तहसील फ्रेंचाइजी की सिक्योरिटी राशि रिफंड नहीं है।</li>
-              <li>जिला फ्रेंचाइजी होल्डर को 3 माह में जिले की सभी तहसीलों की फ्रेंचाइजी दिलवानी है।</li>
-              <li>जिला फ्रेंचाइजी होल्डर को हर तहसील फ्रेंचाइजी से ₹25,000 बतौर कमीशन मिलेगा।</li>
-              <li>तहसील फ्रेंचाइजी देते समय सिक्योरिटी पहले लेकर राजस्थान हेड फ्रेंचाइजी में जमा कर रसीद दें; 500/रुपए स्टांप का एग्रीमेंट तहसील फ्रेंचाइजी से करवाकर प्रति कार्यालय में जमा करनी है।</li>
-              <li>तहसील इनकम में से खर्च निकालकर 15% जिला फ्रेंचाइजी को व 10% राजस्थान हेड फ्रेंचाइजी को देना होगा।</li>
-              <li>किसी भी असंवैधानिक/असमाजिक गतिविधि या केस दर्ज होने पर फ्रेंचाइजी स्वतः निरस्त मानी जाएगी।</li>
-              <li>जिला: प्रतिदिन 5000 प्रतियां नगद (300 गिफ्ट), तहसील: प्रतिदिन 1000 प्रतियां नगद (100 गिफ्ट) लेनी होंगी।</li>
-              <li>तहसील फ्रेंचाइजी 11,000/रुपए सिक्योरिटी लेकर मिनी फ्रेंचाइजी दे सकती है; यह राशि रिफंड नहीं होगी। मिनी फ्रेंचाइजी को रोज 50 प्रतियां नगद व 20 मुफ्त मिलेंगी; प्रति माह ₹2000 विज्ञापन देना अनिवार्य है।</li>
-              <li>मिनी फ्रेंचाइजी राशि में से ₹7000 राजस्थान हेड, ₹2000 जिला फ्रेंचाइजी को, और ₹3000 तहसील फ्रेंचाइजी रखेगा।</li>
-              <li>जिला/तहसील फ्रेंचाइजी एक वर्ष के लिए मान्य; अगले वर्ष पुनः सिक्योरिटी व औपचारिकता आवश्यक।</li>
-              <li>विज्ञापन पर जिला फ्रेंचाइजी को 35% कमीशन; तहसील विज्ञापन पर जिला को 5% और तहसील को 35%। शेष तुरंत राजस्थान हेड को ट्रांसफर करें।</li>
-              <li>मासिक न्यूनतम लक्ष्य: जिला ₹50,000 विज्ञापन, तहसील ₹21,000 विज्ञापन (मिनी फ्रेंचाइजी के ₹2000 के अतिरिक्त)।</li>
-            </ol>
-          </div>
-
-          {/* Franchise lead form */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-5 md:p-6 mb-10 sm:mb-12 shadow-sm">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
-              फ्रेंचाइजी में रुचि दर्ज करें
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
-              अपना नाम, मोबाइल नंबर और पता भेजें। टीम आपसे शीघ्र संपर्क करेगी।
-            </p>
-            <form className="space-y-4" onSubmit={handleFormSubmit}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  नाम *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleFormChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26]"
-                  placeholder="अपना पूरा नाम"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  मोबाइल नंबर *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleFormChange}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26]"
-                  placeholder="उदा: 98XXXXXXXX"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  पता / जिला / तहसील *
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleFormChange}
-                  rows={3}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E21E26] focus:border-[#E21E26]"
-                  placeholder="पूरा पता लिखें"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-[#E21E26] text-white font-semibold px-4 py-3 rounded-lg shadow hover:bg-[#c91b22] transition-colors"
-              >
-                अनुरोध भेजें
-              </button>
-              {submitMessage && (
-                <p className="text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                  {submitMessage}
-                </p>
-              )}
-            </form>
+          {/* Journalist Training Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">जर्नलिस्ट प्रशिक्षण केंद्र</h2>
+            <div className="text-sm sm:text-base text-gray-700 mb-4 space-y-2">
+              <p>
+                दैनिक समाचार पत्र "हमारा समाचार" के द्वारा डिजिटल एडिशन व प्रिंट एडिशन में जर्नलिस्ट प्रशिक्षण सेंटर का संचालन जयपुर में किया जा रहा है ताकि किसी भी संकाय के विद्यार्थी मीडिया क्षेत्र में अपना करियर बना सके।
+              </p>
+              <p className="font-medium">
+                राजस्थान के 12 पास विद्यार्थी जर्नलिस्ट प्रशिक्षण ले सकते हैं।
+              </p>
+            </div>
+            {/* Journalist Training Button */}
+            <button
+              onClick={() => navigate('/journalist-training')}
+              className="w-full sm:w-auto bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <span>प्रशिक्षण के लिए आवेदन करें</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
           {/* Contact Section */}

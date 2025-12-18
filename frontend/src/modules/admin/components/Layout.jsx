@@ -280,6 +280,30 @@ function Layout({ children, title, showSidebar = true, showPageHeader = true, pa
             <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>फ्रेंचाइजी लीड्स</span>
           </Link>
           <Link
+            to="/admin/training-leads"
+            onClick={handleNavClick}
+            className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"
+            style={{
+              backgroundColor: location.pathname.startsWith('/admin/training-leads') ? `${COLORS.header.bg}15` : 'transparent',
+              color: location.pathname.startsWith('/admin/training-leads') ? COLORS.header.bg : '#4B5563'
+            }}
+            onMouseEnter={(e) => {
+              if (!location.pathname.startsWith('/admin/training-leads')) {
+                e.target.style.backgroundColor = '#F3F4F6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!location.pathname.startsWith('/admin/training-leads')) {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span className={`transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 md:hidden'}`}>प्रशिक्षण लीड्स</span>
+          </Link>
+          <Link
             to="/admin/ratings"
             onClick={handleNavClick}
             className="w-full flex items-center gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-all whitespace-nowrap overflow-hidden"

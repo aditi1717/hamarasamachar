@@ -21,6 +21,7 @@ import UserEditPage from './modules/admin/pages/UserEditPage';
 import EpaperPage from './modules/admin/pages/EpaperPage';
 import SubscriptionPlansPage from './modules/admin/pages/SubscriptionPlansPage';
 import FranchiseLeadsPage from './modules/admin/pages/FranchiseLeadsPage';
+import JournalistTrainingLeadsPage from './modules/admin/pages/JournalistTrainingLeadsPage';
 import SplashPage from './modules/user/pages/SplashPage';
 import LoginPage from './modules/user/pages/LoginPage';
 import OTPPage from './modules/user/pages/OTPPage';
@@ -38,6 +39,8 @@ import FeedbackPage from './modules/user/pages/FeedbackPage';
 import AboutPage from './modules/user/pages/AboutPage';
 import ContactPage from './modules/user/pages/ContactPage';
 import FranchisePage from './modules/user/pages/FranchisePage';
+import FranchiseApplicationPage from './modules/user/pages/FranchiseApplicationPage';
+import JournalistTrainingPage from './modules/user/pages/JournalistTrainingPage';
 import TermsAndConditionsPage from './modules/user/pages/TermsAndConditionsPage';
 
 function App() {
@@ -66,6 +69,8 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/franchise" element={<FranchisePage />} />
+          <Route path="/franchise/apply" element={<FranchiseApplicationPage />} />
+          <Route path="/journalist-training" element={<JournalistTrainingPage />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
 
           {/* Admin Routes */}
@@ -92,6 +97,7 @@ function App() {
           <Route path="/admin/epaper" element={<EpaperPage />} />
           <Route path="/admin/plans" element={<SubscriptionPlansPage />} />
           <Route path="/admin/franchise-leads" element={<FranchiseLeadsPage />} />
+          <Route path="/admin/training-leads" element={<JournalistTrainingLeadsPage />} />
         </Routes>
       </AuthProvider>
     </Router>
