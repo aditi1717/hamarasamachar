@@ -20,6 +20,9 @@ function ContentSection({ section, onShare, newsId = null }) {
     .news-content-html a:hover { color: #1d4ed8; }
     .news-content-html img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1.5rem 0; border: 1px solid #e5e7eb; }
     .news-content-html video { max-width: 100%; border-radius: 0.5rem; margin: 1.5rem 0; border: 1px solid #e5e7eb; }
+    .news-content-html img[data-align="left"], .news-content-html video[data-align="left"] { display: block; margin-left: 0; margin-right: auto; }
+    .news-content-html img[data-align="center"], .news-content-html video[data-align="center"] { display: block; margin-left: auto; margin-right: auto; }
+    .news-content-html img[data-align="right"], .news-content-html video[data-align="right"] { display: block; margin-left: auto; margin-right: 0; }
     .news-content-html table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; border: 1px solid #d1d5db; border-radius: 0.5rem; overflow: hidden; }
     .news-content-html table td, .news-content-html table th { border: 1px solid #d1d5db; padding: 0.75rem; }
     .news-content-html table th { background-color: #f3f4f6; font-weight: 600; }

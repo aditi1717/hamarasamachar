@@ -186,3 +186,5 @@ function FranchiseApplicationPage() {
 
 export default FranchiseApplicationPage;
 
+
+

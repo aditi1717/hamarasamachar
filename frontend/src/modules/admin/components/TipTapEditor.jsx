@@ -77,8 +77,11 @@ const ResizableImageComponent = ({ node, updateAttributes }) => {
     const href = node.attrs.href;
     const isValidLink = href && !href.includes('localhost') && !href.startsWith('http://localhost') && !href.startsWith('https://localhost');
 
+    const alignment = node.attrs.align || 'left';
+    const justifyClass = alignment === 'left' ? 'justify-start' : alignment === 'center' ? 'justify-center' : 'justify-end';
+
     return (
-        <NodeViewWrapper className="flex w-full justify-start relative group my-2">
+        <NodeViewWrapper className={`flex w-full ${justifyClass} relative group my-2`}>
             <div className="relative inline-block transition-all duration-200">
                 {isValidLink ? (
                     <a href={href} target="_blank" rel="noopener noreferrer" className="block">
@@ -90,6 +93,33 @@ const ResizableImageComponent = ({ node, updateAttributes }) => {
 
                 {/* Controls Overlay */}
                 <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-md rounded-lg flex flex-col gap-1.5 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 shadow-lg border border-white/10">
+                    {/* Alignment Buttons */}
+                    <div className="flex gap-1 border-b border-white/20 pb-1.5 mb-1">
+                        <button
+                            onClick={() => updateAttributes({ align: 'left' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'left' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            type="button"
+                            title="बाएं (Left)"
+                        >
+                            ⬅
+                        </button>
+                        <button
+                            onClick={() => updateAttributes({ align: 'center' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'center' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            type="button"
+                            title="केंद्र (Center)"
+                        >
+                            ⬌
+                        </button>
+                        <button
+                            onClick={() => updateAttributes({ align: 'right' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'right' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            type="button"
+                            title="दाएं (Right)"
+                        >
+                            ➡
+                        </button>
+                    </div>
                     {/* Link Button */}
                     <button
                         onClick={() => {
@@ -204,8 +234,11 @@ const ResizableVideoComponent = ({ node, updateAttributes }) => {
     const href = node.attrs.href;
     const isValidLink = href && !href.includes('localhost') && !href.startsWith('http://localhost') && !href.startsWith('https://localhost');
 
+    const alignment = node.attrs.align || 'left';
+    const justifyClass = alignment === 'left' ? 'justify-start' : alignment === 'center' ? 'justify-center' : 'justify-end';
+
     return (
-        <NodeViewWrapper className="flex w-full justify-start relative group my-2">
+        <NodeViewWrapper className={`flex w-full ${justifyClass} relative group my-2`}>
             <div className="relative inline-block transition-all duration-200">
                 {isValidLink ? (
                     <a href={href} target="_blank" rel="noopener noreferrer" className="block">
@@ -217,6 +250,33 @@ const ResizableVideoComponent = ({ node, updateAttributes }) => {
 
                 {/* Controls Overlay */}
                 <div className="absolute top-2 right-2 bg-black/75 backdrop-blur-md rounded-lg flex flex-col gap-1.5 p-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 shadow-lg border border-white/10">
+                    {/* Alignment Buttons */}
+                    <div className="flex gap-1 border-b border-white/20 pb-1.5 mb-1">
+                        <button
+                            type="button"
+                            onClick={() => updateAttributes({ align: 'left' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'left' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            title="बाएं (Left)"
+                        >
+                            ⬅
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateAttributes({ align: 'center' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'center' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            title="केंद्र (Center)"
+                        >
+                            ⬌
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateAttributes({ align: 'right' })}
+                            className={`text-[10px] sm:text-xs px-1.5 py-1 rounded transition-colors ${alignment === 'right' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                            title="दाएं (Right)"
+                        >
+                            ➡
+                        </button>
+                    </div>
                     {/* Link Button */}
                     <button
                         type="button"
@@ -810,6 +870,9 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
           .tiptap-content a:hover { color: #1d4ed8; }
           .tiptap-content img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1em 0; }
           .tiptap-content video { max-width: 100%; border-radius: 0.5rem; margin: 1em 0; }
+          .tiptap-content img[data-align="left"], .tiptap-content video[data-align="left"] { display: block; margin-left: 0; margin-right: auto; }
+          .tiptap-content img[data-align="center"], .tiptap-content video[data-align="center"] { display: block; margin-left: auto; margin-right: auto; }
+          .tiptap-content img[data-align="right"], .tiptap-content video[data-align="right"] { display: block; margin-left: auto; margin-right: 0; }
           .tiptap-content blockquote { border-left: 4px solid #E5E7EB; padding-left: 1em; margin-left: 0; color: #6B7280; font-style: italic; margin: 1em 0; }
           .tiptap-content table { border-collapse: collapse; width: 100%; margin: 1em 0; }
           .tiptap-content table td, .tiptap-content table th { border: 1px solid #D1D5DB; padding: 0.5em; }
@@ -831,6 +894,9 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
           .news-content-preview a:hover { color: #1d4ed8; }
           .news-content-preview img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1.5rem 0; border: 1px solid #e5e7eb; }
           .news-content-preview video { max-width: 100%; border-radius: 0.5rem; margin: 1.5rem 0; border: 1px solid #e5e7eb; }
+          .news-content-preview img[data-align="left"], .news-content-preview video[data-align="left"] { display: block; margin-left: 0; margin-right: auto; }
+          .news-content-preview img[data-align="center"], .news-content-preview video[data-align="center"] { display: block; margin-left: auto; margin-right: auto; }
+          .news-content-preview img[data-align="right"], .news-content-preview video[data-align="right"] { display: block; margin-left: auto; margin-right: 0; }
           .news-content-preview table { border-collapse: collapse; width: 100%; margin: 1.5rem 0; border: 1px solid #d1d5db; border-radius: 0.5rem; overflow: hidden; }
           .news-content-preview table td, .news-content-preview table th { border: 1px solid #d1d5db; padding: 0.75rem; }
           .news-content-preview table th { background-color: #f3f4f6; font-weight: 600; }

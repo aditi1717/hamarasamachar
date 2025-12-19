@@ -217,7 +217,7 @@ function NewsCard({ news }) {
   return (
     <div className="bg-white border-b border-gray-100 py-3 sm:py-4 mb-0 mx-0 overflow-hidden">
       {/* Media and Heading Stacked */}
-      <div className="flex flex-col gap-3 mb-3 cursor-pointer" onClick={handleCardClick}>
+      <div className="flex flex-col gap-3 cursor-pointer" onClick={handleCardClick}>
 
         {/* Top - Video/Photo (Full Width) */}
         <div
