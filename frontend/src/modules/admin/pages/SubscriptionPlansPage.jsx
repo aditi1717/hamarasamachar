@@ -12,6 +12,8 @@ import {
   getPlans,
   getSubscribers,
   getPlanStats,
+  updateSubscription,
+  deleteSubscription,
 } from '../services/planService';
 
 function SubscriptionPlansPage() {
@@ -25,6 +27,15 @@ function SubscriptionPlansPage() {
     billingCycle: 'monthly',
     price: '',
     description: '',
+  });
+  const [editingSubscription, setEditingSubscription] = useState(null);
+  const [subscriptionFormData, setSubscriptionFormData] = useState({
+    planId: '',
+    plan: 'monthly',
+    price: '',
+    startDate: '',
+    endDate: '',
+    status: 'active',
   });
 
   useEffect(() => {
@@ -119,6 +130,79 @@ function SubscriptionPlansPage() {
       if (statsData) setStats(statsData);
     } catch (error) {
       showToast(error.message || 'प्लान हटाने में त्रुटि हुई', 'error');
+    }
+  };
+
+  const handleEditSubscription = (subscription) => {
+    setEditingSubscription(subscription);
+    setSubscriptionFormData({
+      planId: subscription.planId || '',
+      plan: subscription.billingCycle || 'monthly',
+      price: subscription.amount || '',
+      startDate: subscription.startDate || '',
+      endDate: subscription.endDate || '',
+      status: subscription.status === 'Active' ? 'active' : subscription.status === 'Expired' ? 'expired' : subscription.status || 'active',
+    });
+  };
+
+  const handleUpdateSubscription = async (e) => {
+    e.preventDefault();
+    if (!editingSubscription) return;
+
+    const { planId, plan, price, startDate, endDate, status } = subscriptionFormData;
+
+    if (!planId.trim()) {
+      showToast('प्लान ID दर्ज करें', 'error');
+      return;
+    }
+
+    const parsedPrice = Number(price);
+    if (!parsedPrice || parsedPrice <= 0) {
+      showToast('मान्य कीमत दर्ज करें', 'error');
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      showToast('प्रारंभ और समाप्ति तिथि दर्ज करें', 'error');
+      return;
+    }
+
+    try {
+      await updateSubscription(editingSubscription.id, {
+        planId: planId.trim(),
+        plan,
+        price: parsedPrice,
+        startDate,
+        endDate,
+        status,
+      });
+
+      setEditingSubscription(null);
+      setSubscriptionFormData({
+        planId: '',
+        plan: 'monthly',
+        price: '',
+        startDate: '',
+        endDate: '',
+        status: 'active',
+      });
+      showToast('सब्सक्रिप्शन अपडेट हो गया', 'success');
+      await loadData();
+    } catch (error) {
+      showToast(error.message || 'सब्सक्रिप्शन अपडेट करने में त्रुटि हुई', 'error');
+    }
+  };
+
+  const handleDeleteSubscription = async (subscription) => {
+    const confirmDelete = window.confirm(`क्या आप वाकई इस सब्सक्रिप्शन को हटाना चाहते हैं?`);
+    if (!confirmDelete) return;
+
+    try {
+      await deleteSubscription(subscription.id);
+      showToast('सब्सक्रिप्शन हटाया गया', 'info');
+      await loadData();
+    } catch (error) {
+      showToast(error.message || 'सब्सक्रिप्शन हटाने में त्रुटि हुई', 'error');
     }
   };
 
@@ -237,15 +321,43 @@ function SubscriptionPlansPage() {
     },
   ];
 
+  const subscriberActions = [
+    {
+      label: 'संपादित करें',
+      variant: 'primary',
+      onClick: (row) => handleEditSubscription(row),
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          />
+        </svg>
+      ),
+    },
+    {
+      label: 'हटाएं',
+      variant: 'danger',
+      onClick: (row) => handleDeleteSubscription(row),
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <ProtectedRoute>
       <Layout
         title="सब्सक्रिप्शन प्लान"
-        pageHeaderRightContent={
-          <span className="text-xs sm:text-sm text-green-600 font-medium">
-            ✓ बैकएंड और डेटाबेस से कनेक्टेड
-          </span>
-        }
       >
         <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-6">
           {loading ? (
@@ -362,6 +474,7 @@ function SubscriptionPlansPage() {
               data={subscribers}
               sortable
               searchable
+              actions={subscriberActions}
               emptyMessage="सब्सक्रिप्शन रिकॉर्ड उपलब्ध नहीं"
             />
           </div>
@@ -376,6 +489,119 @@ function SubscriptionPlansPage() {
             duration={toast.duration}
             onClose={hideToast}
           />
+        )}
+
+        {/* Edit Subscription Modal */}
+        {editingSubscription && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">सब्सक्रिप्शन संपादित करें</h3>
+                  <button
+                    onClick={() => {
+                      setEditingSubscription(null);
+                      setSubscriptionFormData({
+                        planId: '',
+                        plan: 'monthly',
+                        price: '',
+                        startDate: '',
+                        endDate: '',
+                        status: 'active',
+                      });
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <Form onSubmit={handleUpdateSubscription}>
+                  <Form.Field
+                    label="प्लान ID"
+                    name="planId"
+                    value={subscriptionFormData.planId}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, planId: e.target.value })}
+                    placeholder="प्लान ID"
+                    required
+                  />
+                  <Form.Field
+                    label="बिलिंग चक्र"
+                    name="plan"
+                    type="select"
+                    value={subscriptionFormData.plan}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, plan: e.target.value })}
+                    options={[
+                      { label: 'मासिक', value: 'monthly' },
+                      { label: 'वार्षिक', value: 'yearly' },
+                    ]}
+                  />
+                  <Form.Field
+                    label="कीमत (₹)"
+                    name="price"
+                    type="number"
+                    value={subscriptionFormData.price}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, price: e.target.value })}
+                    placeholder="उदाहरण: 149"
+                    min="1"
+                    step="1"
+                    required
+                  />
+                  <Form.Field
+                    label="प्रारंभ तिथि"
+                    name="startDate"
+                    type="date"
+                    value={subscriptionFormData.startDate}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, startDate: e.target.value })}
+                    required
+                  />
+                  <Form.Field
+                    label="समाप्ति तिथि"
+                    name="endDate"
+                    type="date"
+                    value={subscriptionFormData.endDate}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, endDate: e.target.value })}
+                    required
+                  />
+                  <Form.Field
+                    label="स्थिति"
+                    name="status"
+                    type="select"
+                    value={subscriptionFormData.status}
+                    onChange={(e) => setSubscriptionFormData({ ...subscriptionFormData, status: e.target.value })}
+                    options={[
+                      { label: 'सक्रिय', value: 'active' },
+                      { label: 'समाप्त', value: 'expired' },
+                      { label: 'रद्द', value: 'cancelled' },
+                    ]}
+                  />
+                  <Form.Actions>
+                    <Form.Button type="submit" variant="primary">
+                      अपडेट करें
+                    </Form.Button>
+                    <Form.Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditingSubscription(null);
+                        setSubscriptionFormData({
+                          planId: '',
+                          plan: 'monthly',
+                          price: '',
+                          startDate: '',
+                          endDate: '',
+                          status: 'active',
+                        });
+                      }}
+                    >
+                      रद्द करें
+                    </Form.Button>
+                  </Form.Actions>
+                </Form>
+              </div>
+            </div>
+          </div>
         )}
       </Layout>
     </ProtectedRoute>

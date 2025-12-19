@@ -228,6 +228,65 @@ export const getPlanStats = async () => {
   }
 };
 
+/**
+ * Update a subscription
+ * @param {String} subscriptionId - Subscription ID
+ * @param {Object} subscriptionInput - Updated subscription data
+ * @returns {Promise<Object>} Updated subscription
+ */
+export const updateSubscription = async (subscriptionId, subscriptionInput) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans/subscribers/${subscriptionId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(subscriptionInput)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update subscription');
+    }
+
+    return data.data;
+  } catch (error) {
+    console.error('Update subscription error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a subscription
+ * @param {String} subscriptionId - Subscription ID
+ * @returns {Promise<void>}
+ */
+export const deleteSubscription = async (subscriptionId) => {
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/admin/plans/subscribers/${subscriptionId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to delete subscription');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Delete subscription error:', error);
+    throw error;
+  }
+};
+
 
 
 

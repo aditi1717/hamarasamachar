@@ -372,3 +372,95 @@ export const getPlanStats = async (req, res) => {
   }
 };
 
+// @desc    Update subscription
+// @route   PUT /api/admin/plans/subscribers/:id
+// @access  Private (Admin)
+export const updateSubscription = async (req, res) => {
+  try {
+    const { planId, plan, price, startDate, endDate, status } = req.body;
+    const subscriptionId = req.params.id;
+
+    const subscription = await Subscription.findById(subscriptionId);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    // Update fields if provided
+    if (planId) subscription.planId = planId;
+    if (plan && ['monthly', 'yearly'].includes(plan)) subscription.plan = plan;
+    if (price !== undefined && price > 0) subscription.price = parseFloat(price);
+    if (startDate) subscription.startDate = new Date(startDate);
+    if (endDate) subscription.endDate = new Date(endDate);
+    if (status && ['active', 'expired', 'cancelled'].includes(status)) {
+      subscription.status = status;
+    }
+
+    await subscription.save();
+
+    // Populate user for response
+    await subscription.populate('user', 'name phone userId');
+
+    res.json({
+      success: true,
+      data: {
+        id: subscription._id.toString(),
+        name: subscription.user?.name || subscription.user?.userId || 'Unknown',
+        userId: subscription.user?.userId || '',
+        phone: subscription.user?.phone || '',
+        planId: subscription.planId,
+        planName: subscription.plan === 'monthly' ? 'मासिक प्लान' : 'वार्षिक प्लान',
+        billingCycle: subscription.plan,
+        amount: subscription.price,
+        startDate: subscription.startDate.toISOString().split('T')[0],
+        endDate: subscription.endDate.toISOString().split('T')[0],
+        status: subscription.status === 'active' && new Date() <= subscription.endDate ? 'Active' : 
+                subscription.status === 'expired' || (subscription.status === 'active' && new Date() > subscription.endDate) ? 'Expired' : 
+                subscription.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update subscription'
+    });
+  }
+};
+
+// @desc    Delete subscription
+// @route   DELETE /api/admin/plans/subscribers/:id
+// @access  Private (Admin)
+export const deleteSubscription = async (req, res) => {
+  try {
+    const subscriptionId = req.params.id;
+
+    const subscription = await Subscription.findById(subscriptionId);
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subscription not found'
+      });
+    }
+
+    // Delete associated payment records
+    await Payment.deleteMany({ subscription: subscriptionId });
+
+    // Delete subscription
+    await subscription.deleteOne();
+
+    res.json({
+      success: true,
+      message: 'Subscription deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to delete subscription'
+    });
+  }
+};
+
