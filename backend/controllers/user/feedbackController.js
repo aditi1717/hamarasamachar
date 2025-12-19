@@ -1,5 +1,26 @@
 import Feedback from '../../models/Feedback.js';
 
+// @desc    Get user's own feedbacks
+// @route   GET /api/user/feedback/me
+// @access  Private
+export const getUserFeedback = async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find({
+      user: req.user._id
+    }).sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: feedbacks
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Create feedback
 // @route   POST /api/user/feedback
 // @access  Public (can be anonymous)

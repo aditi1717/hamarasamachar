@@ -75,13 +75,12 @@ const FeedbackListPage = () => {
     };
 
     const handleExportCSV = () => {
-        const headers = ['ID', 'Type', 'Text', 'User Name', 'User Contact', 'Date', 'Status'];
+        const headers = ['User ID', 'Type', 'Text', 'User Contact', 'Date', 'Status'];
         const csvData = feedbacks.map(f => [
-            f.id,
+            f.user?.userId || f.id,
             f.type,
             `"${f.text.replace(/"/g, '""')}"`,
-            f.user ? f.user.name : 'Anonymous',
-            f.user ? f.user.contact : 'N/A',
+            f.user ? f.user.contact : '-',
             new Date(f.date).toLocaleDateString(),
             f.status
         ]);
@@ -101,7 +100,16 @@ const FeedbackListPage = () => {
     };
 
     const columns = [
-        { key: 'id', label: 'ID', sortable: true },
+        {
+            key: 'id',
+            label: 'ID',
+            sortable: true,
+            render: (val, row) => (
+                <span className="font-mono text-xs text-gray-600">
+                    {row.user?.userId || val}
+                </span>
+            )
+        },
         {
             key: 'type',
             label: 'प्रकार',
@@ -123,10 +131,10 @@ const FeedbackListPage = () => {
             label: 'उपयोगकर्ता',
             render: (val) => val ? (
                 <div className="flex flex-col">
-                    <span className="font-medium">{val.name}</span>
+                    <span className="font-medium">{val.userId}</span>
                     <span className="text-xs text-gray-500">{val.contact}</span>
                 </div>
-            ) : <span className="text-gray-400 italic">Anonymous</span>
+            ) : <span className="text-gray-400 italic">-</span>
         },
         {
             key: 'date',
@@ -330,11 +338,11 @@ const FeedbackListPage = () => {
                                         <h4 className="text-sm text-gray-500">उपयोगकर्ता:</h4>
                                         {selectedFeedback.user ? (
                                             <div>
-                                                <p className="font-medium">{selectedFeedback.user.name}</p>
+                                                <p className="font-medium">{selectedFeedback.user.userId}</p>
                                                 <p className="text-sm text-blue-600">{selectedFeedback.user.contact}</p>
                                             </div>
                                         ) : (
-                                            <p className="text-gray-500 italic">Guest User</p>
+                                            <p className="text-gray-500 italic">-</p>
                                         )}
                                     </div>
                                 </div>

@@ -5,7 +5,7 @@ import FranchiseLead from '../../models/FranchiseLead.js';
 // @access  Public
 export const createLead = async (req, res) => {
   try {
-    const { name, phone, address, source } = req.body;
+    const { name, phone, address, source, qualification, age, additionalInfo } = req.body;
 
     // Validation
     if (!name || !name.trim()) {
@@ -46,7 +46,10 @@ export const createLead = async (req, res) => {
       phone: phone.trim(),
       address: address.trim(),
       source: source || 'franchise_page',
-      status: 'new'
+      status: 'new',
+      qualification: qualification?.trim() || '',
+      age: age?.trim() || '',
+      additionalInfo: additionalInfo?.trim() || ''
     });
 
     res.status(201).json({

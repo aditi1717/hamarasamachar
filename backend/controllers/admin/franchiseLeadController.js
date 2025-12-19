@@ -15,12 +15,19 @@ export const getAllLeads = async (req, res) => {
       query.status = status;
     }
 
+    // Filter by source
+    if (req.query.source) {
+      query.source = req.query.source;
+    }
+
     // Search filter
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
-        { address: { $regex: search, $options: 'i' } }
+        { address: { $regex: search, $options: 'i' } },
+        { qualification: { $regex: search, $options: 'i' } },
+        { additionalInfo: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -201,10 +208,13 @@ export const deleteLead = async (req, res) => {
 // @access  Private (Admin)
 export const getLeadStats = async (req, res) => {
   try {
-    const total = await FranchiseLead.countDocuments();
-    const newCount = await FranchiseLead.countDocuments({ status: 'new' });
-    const contactedCount = await FranchiseLead.countDocuments({ status: 'contacted' });
-    const closedCount = await FranchiseLead.countDocuments({ status: 'closed' });
+    const { source } = req.query;
+    const filter = source ? { source } : {};
+
+    const total = await FranchiseLead.countDocuments(filter);
+    const newCount = await FranchiseLead.countDocuments({ ...filter, status: 'new' });
+    const contactedCount = await FranchiseLead.countDocuments({ ...filter, status: 'contacted' });
+    const closedCount = await FranchiseLead.countDocuments({ ...filter, status: 'closed' });
 
     res.json({
       success: true,

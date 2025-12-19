@@ -6,7 +6,6 @@ import { Youtube } from '@tiptap/extension-youtube';
 import { Link } from '@tiptap/extension-link';
 import { Underline } from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
 import { Highlight } from '@tiptap/extension-highlight';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Placeholder } from '@tiptap/extension-placeholder';
@@ -696,35 +695,6 @@ const MenuBar = ({ editor, showConfirm, showPreview, setShowPreview }) => {
                 </svg>
             </button>
 
-            <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-
-            {/* Color Picker */}
-            <div className="flex items-center gap-1">
-                <input
-                    type="color"
-                    onChange={event => {
-                        const color = event.target.value;
-                        if (editor.state.selection.empty) {
-                            // If no text selected, set color for next typed text
-                            editor.chain().focus().setColor(color).run();
-                        } else {
-                            // If text is selected, apply color to selection
-                            editor.chain().focus().setColor(color).run();
-                        }
-                    }}
-                    value={editor.getAttributes('textStyle').color || '#000000'}
-                    className="w-8 h-8 p-0 border border-gray-300 rounded cursor-pointer self-center"
-                    title="Text Color"
-                />
-                <button
-                    type="button"
-                    onClick={() => editor.chain().focus().unsetColor().run()}
-                    className="p-1.5 rounded hover:bg-gray-100 text-xs"
-                    title="Reset Color"
-                >
-                    ✕
-                </button>
-            </div>
 
         </div>
     );
@@ -734,6 +704,17 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
     const [isFocused, setIsFocused] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const { confirmDialog, showConfirm } = useConfirm();
+
+    // Function to strip color styles from HTML content
+    const stripColorStyles = (html) => {
+        if (!html || typeof html !== 'string') return html;
+
+        return html
+            .replace(/color:\s*[^;]+;?/gi, '')
+            .replace(/background-color:\s*[^;]+;?/gi, '')
+            .replace(/style="[^"]*color:[^"]*"[^>]*>/gi, '>')
+            .replace(/style="[^"]*background-color:[^"]*"[^>]*>/gi, '>');
+    };
 
     const editor = useEditor({
         extensions: [
@@ -754,7 +735,6 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
                 },
             }),
             TextStyle,
-            Color,
             Highlight,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
             Placeholder.configure({ placeholder }),
@@ -828,18 +808,50 @@ const TipTapEditor = ({ content = '', onChange, placeholder = 'यहाँ ल�
                     }
                 }
                 return false;
+            },
+            // Strip color styles from pasted content
+            handlePaste: (view, event, slice) => {
+                // Get pasted HTML content
+                const pastedHtml = event.clipboardData?.getData('text/html');
+                if (pastedHtml) {
+                    // Strip color and background-color styles
+                    const cleanedHtml = pastedHtml
+                        .replace(/color:\s*[^;]+;?/gi, '')
+                        .replace(/background-color:\s*[^;]+;?/gi, '')
+                        .replace(/style="[^"]*color:[^"]*"[^>]*>/gi, '>')
+                        .replace(/style="[^"]*background-color:[^"]*"[^>]*>/gi, '>');
+
+                    // Replace the clipboard data with cleaned HTML
+                    const cleanedData = new DataTransfer();
+                    cleanedData.setData('text/html', cleanedHtml);
+                    cleanedData.setData('text/plain', event.clipboardData.getData('text/plain'));
+
+                    // Create a new paste event with cleaned data
+                    const newEvent = new ClipboardEvent('paste', {
+                        clipboardData: cleanedData,
+                        bubbles: true,
+                        cancelable: true
+                    });
+
+                    // Dispatch the cleaned paste event
+                    view.dom.dispatchEvent(newEvent);
+                    return true; // Prevent default handling
+                }
+                return false; // Use default paste handling for non-HTML content
             }
-        },
+        }
     });
 
     // Update content if it changes externally (only on initial load or when content prop changes significantly)
     useEffect(() => {
         if (editor && content !== undefined) {
             const currentContent = editor.getHTML();
+            // Strip color styles from incoming content
+            const cleanContent = stripColorStyles(content);
             // Only update if content is significantly different (to avoid infinite loops)
             // Update on initial load or when content prop is explicitly changed from parent
-            if (editor.isEmpty || (content && currentContent !== content && content.trim() !== '')) {
-                editor.commands.setContent(content, false); // false = don't add to history
+            if (editor.isEmpty || (cleanContent && currentContent !== cleanContent && cleanContent.trim() !== '')) {
+                editor.commands.setContent(cleanContent, false); // false = don't add to history
             }
         }
     }, [content, editor]);
