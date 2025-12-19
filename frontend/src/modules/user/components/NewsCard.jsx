@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toggleBookmark, isNewsBookmarked } from '../utils/bookmarkUtils';
 
-function NewsCard({ news }) {
+function NewsCard({ news, isInBookmarkPage = false }) {
   const navigate = useNavigate();
   const isVideo = news.type === 'video';
   const videoRef = useRef(null);
@@ -164,15 +164,29 @@ function NewsCard({ news }) {
     if (!newsId) return;
 
     try {
-      const bookmarked = await toggleBookmark(newsId);
-      setIsBookmarked(bookmarked);
-      if (bookmarked) {
-        alert('समाचार सेव हो गया!');
+      if (isInBookmarkPage) {
+        // Remove from bookmarks
+        const { removeBookmark } = await import('../services/bookmarkService');
+        await removeBookmark(newsId);
+        setIsBookmarked(false);
+        alert('बुकमार्क से हटा दिया गया!');
+
+        // Dispatch custom event to refresh bookmark list
+        window.dispatchEvent(new CustomEvent('bookmarksChanged', {
+          detail: { newsId, isBookmarked: false }
+        }));
       } else {
-        alert('समाचार सेव हटा दिया गया!');
+        // Add to bookmarks
+        const bookmarked = await toggleBookmark(newsId);
+        setIsBookmarked(bookmarked);
+        if (bookmarked) {
+          alert('समाचार सेव हो गया!');
+        } else {
+          alert('समाचार सेव हटा दिया गया!');
+        }
       }
     } catch (error) {
-      console.error('Error saving bookmark:', error);
+      console.error('Error handling bookmark:', error);
       alert('त्रुटि हुई, कृपया पुनः प्रयास करें');
     }
     setShowMenu(false);
@@ -356,7 +370,7 @@ function NewsCard({ news }) {
                 <span className="text-sm sm:text-base font-medium">शेयर करें</span>
               </button>
 
-              {/* Save Option */}
+              {/* Save/Remove Bookmark Option */}
               <button
                 onClick={handleSave}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors text-left text-gray-700"
@@ -364,13 +378,15 @@ function NewsCard({ news }) {
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
-                  fill="none"
+                  fill={isInBookmarkPage ? "currentColor" : "none"}
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                <span className="text-sm sm:text-base font-medium">सेव करें</span>
+                <span className="text-sm sm:text-base font-medium">
+                  {isInBookmarkPage ? 'बुकमार्क से हटाएँ' : 'सेव करें'}
+                </span>
               </button>
             </div>
           )}

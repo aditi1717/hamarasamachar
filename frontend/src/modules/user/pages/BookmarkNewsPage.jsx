@@ -157,7 +157,7 @@ function BookmarkNewsPage() {
             <div className="space-y-0">
               {bookmarkedNews.map((news) => {
                 const newsId = news.id || news._id;
-                return <NewsCard key={newsId} news={news} />;
+                return <NewsCard key={newsId} news={news} isInBookmarkPage={true} />;
               })}
             </div>
           ) : (
