@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sendOTP } from '../services/authService';
+import { useToast } from '../hooks/useToast';
+import Toast from '../components/Toast';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { toast, showToast, hideToast } = useToast();
   const [mobileNumber, setMobileNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [loading, setLoading] = useState(false);
@@ -42,7 +45,7 @@ function LoginPage() {
 
   const handleContinue = async () => {
     if (mobileNumber.length !== 10) {
-      alert('कृपया 10 अंकों का मोबाइल नंबर दर्ज करें');
+      showToast('कृपया 10 अंकों का मोबाइल नंबर दर्ज करें', 'error');
       return;
     }
 
@@ -62,7 +65,7 @@ function LoginPage() {
     } catch (error) {
       console.error('Send OTP error:', error);
       setError(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
-      alert(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+      showToast(error.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,7 +86,8 @@ function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-white flex flex-col page-transition" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
+    <>
+      <div className="fixed inset-0 overflow-hidden bg-white flex flex-col page-transition" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
       {/* Header - Sticky */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-2.5 sm:px-3 py-2 sm:py-2.5 shadow-md flex-shrink-0" style={{ backgroundColor: '#E21E26' }}>
         <button
@@ -186,6 +190,17 @@ function LoginPage() {
         </div>
       </div>
     </div>
+
+    {/* Toast Notification */}
+    {toast && (
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
+    )}
+    </>
   );
 }
 
