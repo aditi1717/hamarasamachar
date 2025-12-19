@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { sendOTP } from '../services/authService';
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast, showToast, hideToast } = useToast();
   const [mobileNumber, setMobileNumber] = useState('');
   const [countryCode, setCountryCode] = useState('+91');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const redirectMessage = location.state?.message || null;
+  const redirectTo = location.state?.redirectTo || null;
 
   useEffect(() => {
     // Prevent body scroll on mount
@@ -58,7 +61,13 @@ function LoginPage() {
       
       if (response.success) {
         // Navigate to OTP page (mobile number will be saved in userData after OTP verification)
-        navigate('/otp', { state: { mobileNumber: fullPhoneNumber } });
+        navigate('/otp', { 
+          state: { 
+            mobileNumber: fullPhoneNumber,
+            redirectTo: redirectTo,
+            redirectMessage: redirectMessage
+          } 
+        });
       } else {
         setError(response.message || 'OTP भेजने में समस्या हुई');
       }
@@ -123,8 +132,15 @@ function LoginPage() {
           {/* Login Prompt */}
           <div className="mb-2 sm:mb-3">
             <p className="text-xs sm:text-sm font-semibold text-gray-900 text-center leading-snug">
-              कृपया लॉगिन करने के लिए अपना मोबाइल नंबर जोड़ें
+              {redirectMessage || 'कृपया लॉगिन करने के लिए अपना मोबाइल नंबर जोड़ें'}
             </p>
+            {redirectMessage && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-700 text-center leading-snug">
+                  {redirectMessage}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Mobile Number Input */}

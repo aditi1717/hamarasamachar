@@ -6,6 +6,7 @@ function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const mobileNumber = location.state?.mobileNumber || '+916264560457';
+  const redirectTo = location.state?.redirectTo || null;
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']); // Changed to 6 digits
   const [timer, setTimer] = useState(60);
@@ -118,6 +119,12 @@ function OTPPage() {
         // Save user data (contains phone/mobile number)
         if (response.user) {
           localStorage.setItem('userData', JSON.stringify(response.user));
+        }
+        
+        // Check if there's a redirect path (from protected pages)
+        if (redirectTo) {
+          navigate(redirectTo);
+          return;
         }
         
         // Check if profile is complete
