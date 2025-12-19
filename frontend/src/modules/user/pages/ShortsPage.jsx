@@ -14,6 +14,7 @@ function ShortsPage() {
   const videoRefs = useRef({});
   const videoNewsRef = useRef([]);
   const [isPlaying, setIsPlaying] = useState({});
+  const [isMuted, setIsMuted] = useState({});
   const [disableScroll, setDisableScroll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,6 +61,8 @@ function ShortsPage() {
                   setTimeout(() => {
                     const video = videoRefs.current[videoIdFromUrl];
                     if (video) {
+                      video.muted = true; // Ensure muted for autoplay
+                      setIsMuted(prev => ({ ...prev, [videoIdFromUrl]: true }));
                       video.play().catch(() => { });
                       setIsPlaying(prev => ({ ...prev, [videoIdFromUrl]: true }));
                     }
@@ -156,6 +159,9 @@ function ShortsPage() {
         } else {
           videoElement.pause();
           setIsPlaying(prev => ({ ...prev, [videoId]: false }));
+          // Mute inactive videos
+          videoElement.muted = true;
+          setIsMuted(prev => ({ ...prev, [videoId]: true }));
         }
       });
     };
@@ -190,6 +196,8 @@ function ShortsPage() {
     const timeoutId = setTimeout(() => {
       const videoElement = videoRefs.current[firstVideoId];
       if (videoElement) {
+        videoElement.muted = true; // Ensure muted for autoplay
+        setIsMuted(prev => ({ ...prev, [firstVideoId]: true }));
         videoElement.play().catch(() => { });
         setIsPlaying(prev => ({ ...prev, [firstVideoId]: true }));
       }
@@ -274,13 +282,30 @@ function ShortsPage() {
   const handleVideoClick = (videoId) => {
     const videoElement = videoRefs.current[videoId];
     if (videoElement) {
+      // If video is paused, play it and unmute
       if (videoElement.paused) {
         videoElement.play();
         setIsPlaying(prev => ({ ...prev, [videoId]: true }));
+        // Enable audio on first interaction
+        videoElement.muted = false;
+        setIsMuted(prev => ({ ...prev, [videoId]: false }));
       } else {
+        // If video is playing, pause it
         videoElement.pause();
         setIsPlaying(prev => ({ ...prev, [videoId]: false }));
       }
+    }
+  };
+
+  const handleMuteToggle = (videoId, e) => {
+    // Prevent event bubbling to avoid triggering video click
+    e.stopPropagation();
+
+    const videoElement = videoRefs.current[videoId];
+    if (videoElement) {
+      const newMutedState = !videoElement.muted;
+      videoElement.muted = newMutedState;
+      setIsMuted(prev => ({ ...prev, [videoId]: newMutedState }));
     }
   };
 
@@ -530,6 +555,58 @@ function ShortsPage() {
                     </svg>
                   </div>
                   <span className="text-[10px] sm:text-xs font-medium drop-shadow-md opacity-90">शेयर</span>
+                </button>
+
+                {/* Mute/Unmute Button */}
+                <button
+                  onClick={(e) => handleMuteToggle(newsId, e)}
+                  className="group flex flex-col items-center gap-1 text-white transition-transform active:scale-95"
+                  aria-label={isMuted[newsId] !== false ? "Unmute" : "Mute"}
+                >
+                  <div className="bg-black/40 p-2.5 rounded-full backdrop-blur-md border border-white/10 group-hover:bg-black/60 transition-colors shadow-lg">
+                    {isMuted[newsId] !== false ? (
+                      // Muted icon (speaker with X)
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 sm:h-6 sm:w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                        />
+                      </svg>
+                    ) : (
+                      // Unmuted icon (speaker with sound waves)
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 sm:h-6 sm:w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3m3 3a3 3 0 01-3 3m3-3v4"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-[10px] sm:text-xs font-medium drop-shadow-md opacity-90">
+                    {isMuted[newsId] !== false ? "अनम्यूट" : "म्यूट"}
+                  </span>
                 </button>
               </div>
 
