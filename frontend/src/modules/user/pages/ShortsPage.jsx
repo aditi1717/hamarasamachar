@@ -207,6 +207,18 @@ function ShortsPage() {
   }, [videoNews.length, videoIdFromUrl, disableScroll]);
 
   const handleShare = (news) => {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      // Redirect to login with message
+      navigate('/login', { 
+        state: { 
+          message: 'वीडियो शेयर करने के लिए कृपया लॉगिन करें या साइन अप करें',
+          redirectTo: window.location.pathname + window.location.search
+        } 
+      });
+      return;
+    }
+
     const newsId = news.id || news._id;
     const shareUrl = `${window.location.origin}/shorts?video=${newsId}`;
     

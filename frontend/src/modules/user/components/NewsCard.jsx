@@ -100,7 +100,19 @@ function NewsCard({ news, isInBookmarkPage = false }) {
   const afterColon = hasColon ? news.title.substring(colonIndex + 1).trim() : '';
 
   const handleShare = () => {
-    // TODO: Implement share functionality
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      // Redirect to login with message
+      navigate('/login', { 
+        state: { 
+          message: 'समाचार शेयर करने के लिए कृपया लॉगिन करें या साइन अप करें',
+          redirectTo: window.location.pathname
+        } 
+      });
+      return;
+    }
+
+    // Share functionality
     if (navigator.share) {
       navigator.share({
         title: news.title,
@@ -163,6 +175,19 @@ function NewsCard({ news, isInBookmarkPage = false }) {
   }, [news.id, news._id]);
 
   const handleSave = async () => {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      // Redirect to login with message
+      navigate('/login', { 
+        state: { 
+          message: 'समाचार सेव करने के लिए कृपया लॉगिन करें या साइन अप करें',
+          redirectTo: window.location.pathname
+        } 
+      });
+      setShowMenu(false);
+      return;
+    }
+
     const newsId = news.id || news._id;
     if (!newsId) return;
 
@@ -190,7 +215,17 @@ function NewsCard({ news, isInBookmarkPage = false }) {
       }
     } catch (error) {
       console.error('Error handling bookmark:', error);
-      showToast('त्रुटि हुई, कृपया पुनः प्रयास करें', 'error');
+      // If unauthorized, redirect to login
+      if (error.message && (error.message.includes('authenticated') || error.message.includes('authorization') || error.message.includes('token'))) {
+        navigate('/login', { 
+          state: { 
+            message: 'समाचार सेव करने के लिए कृपया लॉगिन करें या साइन अप करें',
+            redirectTo: window.location.pathname
+          } 
+        });
+      } else {
+        showToast('त्रुटि हुई, कृपया पुनः प्रयास करें', 'error');
+      }
     }
     setShowMenu(false);
   };

@@ -21,11 +21,23 @@ function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    // Check authentication first
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      // Redirect to login with message
+      navigate('/login', { 
+        state: { 
+          message: 'प्रोफाइल देखने के लिए कृपया लॉगिन करें या साइन अप करें',
+          redirectTo: '/profile'
+        } 
+      });
+      return;
+    }
+
     // Load user data from backend first, then fallback to localStorage
     const loadUserData = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('userToken');
         
         if (token) {
           // Try to load from backend
@@ -156,7 +168,19 @@ function ProfilePage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
-      action: () => navigate('/city-selection')
+      action: () => {
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          navigate('/login', { 
+            state: { 
+              message: 'शहर चुनने के लिए कृपया लॉगिन करें या साइन अप करें',
+              redirectTo: '/city-selection'
+            } 
+          });
+          return;
+        }
+        navigate('/city-selection');
+      }
     },
     {
       id: 'topics',
@@ -166,7 +190,19 @@ function ProfilePage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
         </svg>
       ),
-      action: () => navigate('/category-selection', { state: { editMode: true } })
+      action: () => {
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          navigate('/login', { 
+            state: { 
+              message: 'पसंदीदा रुचि देखने के लिए कृपया लॉगिन करें या साइन अप करें',
+              redirectTo: '/category-selection'
+            } 
+          });
+          return;
+        }
+        navigate('/category-selection', { state: { editMode: true } });
+      }
     },
     {
       id: 'about',
@@ -206,7 +242,19 @@ function ProfilePage() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
       ),
-      action: () => navigate('/bookmarks')
+      action: () => {
+        const token = localStorage.getItem('userToken');
+        if (!token) {
+          navigate('/login', { 
+            state: { 
+              message: 'बुकमार्क न्यूज़ देखने के लिए कृपया लॉगिन करें या साइन अप करें',
+              redirectTo: '/bookmarks'
+            } 
+          });
+          return;
+        }
+        navigate('/bookmarks');
+      }
     },
     {
       id: 'notifications',

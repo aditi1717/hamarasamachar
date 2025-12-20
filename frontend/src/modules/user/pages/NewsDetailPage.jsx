@@ -177,6 +177,18 @@ function NewsDetailPage() {
   const afterColon = hasColon ? news?.title.substring(colonIndex + 1).trim() : '';
 
   const handleShare = () => {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      // Redirect to login with message
+      navigate('/login', { 
+        state: { 
+          message: 'समाचार शेयर करने के लिए कृपया लॉगिन करें या साइन अप करें',
+          redirectTo: window.location.pathname
+        } 
+      });
+      return;
+    }
+
     if (navigator.share) {
       navigator.share({
         title: news?.title,
