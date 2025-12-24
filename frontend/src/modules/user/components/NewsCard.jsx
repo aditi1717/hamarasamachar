@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toggleBookmark, isNewsBookmarked } from '../utils/bookmarkUtils';
 import { useToast } from '../hooks/useToast';
 import Toast from './Toast';
+import LazyImage from '../../../components/LazyImage';
+import LazyVideo from '../../../components/LazyVideo';
 
 function NewsCard({ news, isInBookmarkPage = false }) {
   const navigate = useNavigate();
@@ -280,7 +282,7 @@ function NewsCard({ news, isInBookmarkPage = false }) {
             {isVideo && news.videoUrl ? (
               <>
                 {/* Video Preview - GIF jaisa (fast speed, chhota portion loop) */}
-                <video
+                <LazyVideo
                   ref={videoRef}
                   src={news.videoUrl}
                   className="w-full h-full object-cover"
@@ -290,7 +292,7 @@ function NewsCard({ news, isInBookmarkPage = false }) {
                   playsInline
                   preload="auto"
                   style={{ pointerEvents: 'none' }}
-                  onLoadedMetadata={() => {
+                  onLoad={() => {
                     if (videoRef.current) {
                       videoRef.current.playbackRate = 2.0; // Fast speed (2x)
                       // Actual video duration (original, speed badhane se pehle)
@@ -310,20 +312,15 @@ function NewsCard({ news, isInBookmarkPage = false }) {
                 )}
               </>
             ) : news.image ? (
-              <img
+              <LazyImage
                 src={news.image}
                 alt={news.title}
                 className="w-full h-full object-cover"
                 style={{ display: 'block' }}
                 onError={(e) => {
                   console.error('Image failed to load:', news.image);
-                  // Fallback if image fails to load
-                  e.target.src = 'https://picsum.photos/400/300?random=' + news.id;
                 }}
-                onLoad={() => {
-                  console.log('Image loaded successfully:', news.image);
-                }}
-                loading="lazy"
+                errorSrc={'https://picsum.photos/400/300?random=' + news.id}
               />
             ) : (
               <div className="w-full h-full bg-gray-200 flex items-center justify-center">

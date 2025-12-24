@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getAllNews } from '../services/newsService';
 import logo from '../assets/samachar-logo.png';
 import BottomNavbar from '../components/BottomNavbar';
+import LazyImage from '../../../components/LazyImage';
+import LazyVideo from '../../../components/LazyVideo';
 
 function ShortsPage() {
   const navigate = useNavigate();
@@ -393,7 +395,7 @@ function ShortsPage() {
 
             {/* Logo */}
             <div className="flex-shrink-0 h-16 sm:h-20 md:h-24 w-auto -ml-1">
-              <img
+              <LazyImage
                 src={logo}
                 alt="हमारा समाचार"
                 className="h-full w-auto object-contain"
